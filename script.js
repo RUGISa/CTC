@@ -568,11 +568,11 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.181.1/build/three.m
     });
     workerSignature.addEventListener('pointerup',finishSignature);workerSignature.addEventListener('pointercancel',finishSignature);workerSignature.addEventListener('pointerleave',event=>{if(signatureDrawing&&event.buttons===0)finishSignature()});
     $('#startLoopButton').onclick=()=>goStorage();$('#modeInspectionButton').onclick=goInspection;$('#modeStorageButton').onclick=goStorage;$('#inspectionHome').onclick=goMain;$('#storageHome').onclick=goMain;$('#goStorageButton').onclick=goStorage;$('#emptyGoStorage').onclick=goStorage;$('#goInspectionButton').onclick=()=>{goInspection();if(onboardingActive&&guideMode==='move')setTimeout(startInspectionGuide,180)};
-    $('#modeCollectionButton').onclick=()=>openCollection(mainMenu);$('#menuCollectionQuick').onclick=()=>openCollection(mainMenu);$('#inspectionCollection').onclick=()=>openCollection(inspectionGame);$('#collectionHome').onclick=()=>{showScreen(collectionReturnScreen);if(collectionReturnScreen===inspectionGame){updateInspectionUI();resizeInspection()}else if(collectionReturnScreen===storageGame){updateStorageUI();resizeStorage()}};
+    $('#modeCollectionButton').onclick=()=>openCollection(mainMenu);$('#inspectionCollection').onclick=()=>openCollection(inspectionGame);$('#collectionHome').onclick=()=>{showScreen(collectionReturnScreen);if(collectionReturnScreen===inspectionGame){updateInspectionUI();resizeInspection()}else if(collectionReturnScreen===storageGame){updateStorageUI();resizeStorage()}};
     $('#selectKorean').onclick=()=>chooseLanguage('ko');$('#selectJapanese').onclick=()=>chooseLanguage('ja');
     $('#buyBoxButton').onclick=buyBox;$('#buyAnotherButton').onclick=buyBox;
     $('#clearBoxesButton').onclick=()=>{if(confirm(translateString('보유 상자를 모두 비울까요?'))){state.boxes=[];saveState();updateStorageUI()}};
-    const resetAllData=()=>{const message=currentLanguage==='ja'?'資金、保有箱、図鑑を初期状態に戻しますか？':'돈, 보유 상자, 도감 기록을 처음 상태로 되돌릴까요?';if(confirm(message)){state={money:1000,boxes:[],tutorialDone:false,collection:{}};saveState();beginCurrentBox();updateStorageUI();renderCollection();goMain()}};$('#resetSaveButton').onclick=resetAllData;$('#resetSaveQuick').onclick=resetAllData;
+    const resetAllData=()=>{const message=currentLanguage==='ja'?'資金、保有箱、図鑑を初期状態に戻しますか？':'돈, 보유 상자, 도감 기록을 처음 상태로 되돌릴까요?';if(confirm(message)){state={money:1000,boxes:[],tutorialDone:false,collection:{}};saveState();beginCurrentBox();updateStorageUI();renderCollection();goMain()}};$('#resetSaveButton').onclick=resetAllData;
     document.querySelectorAll('.sound-toggle').forEach(button=>button.onclick=toggleSound);
     document.addEventListener('pointerdown',event=>{const button=event.target.closest('button');if(button&&!button.classList.contains('sound-toggle'))playSound('click')},{passive:true});
     $('#ruleButton').onclick=()=>$('#ruleOverlay').classList.remove('hidden');$('#ruleClose').onclick=()=>$('#ruleOverlay').classList.add('hidden');
@@ -582,14 +582,38 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.181.1/build/three.m
 
     const guideOverlay=$('#guideOverlay'),guideFocus=$('#guideFocus'),guideCard=$('#guideCard'),guideKicker=$('#guideKicker'),guideTitle=$('#guideTitle'),guideText=$('#guideText'),guideTask=$('#guideTask'),guideProgress=$('#guideProgress'),guideNext=$('#guideNext'),guideSkip=$('#guideSkip');
     let guideMode='',guideIndex=0;
-    const inspectionGuideSteps=[
-      {target:'[data-tool="weight"]',title:'첫 번째 단서를 직접 조사하세요',text:'무게 측정은 내용물의 움직임과 무게 중심을 알려줍니다.',task:'강조된 무게 측정 버튼을 눌러주세요.',action:'tool',value:'weight'},
-      {target:'#guideCluesTarget',title:'조사 기록을 확인하세요',text:'방금 얻은 단서가 조사 기록에 추가됐습니다. 모든 결과는 정확하지만 표현은 간접적입니다.',task:'기록을 읽은 뒤 아래 확인 버튼을 눌러주세요.',action:'next'},
-      {target:'[data-tool="surface"]',title:'위험도 단서를 하나 더 찾으세요',text:'표면 흔적은 상자 안쪽의 긁힘과 충격 흔적으로 위험도를 알려줍니다.',task:'강조된 표면 흔적 버튼을 눌러주세요.',action:'tool',value:'surface'},
-      {target:'#guideGuessTarget',title:'판정을 직접 입력하세요',text:'카테고리와 위험도를 선택해야 개봉 결과와 비교할 수 있습니다.',task:'카테고리와 위험도를 모두 선택해주세요.',action:'guess'},
-      {target:'#guideOpenTarget',title:'상자를 개봉해 답을 확인하세요',text:'개봉하면 상자 한 개가 소비되고 카테고리와 위험도 정답마다 150 G를 받습니다.',task:'강조된 상자 개봉 버튼을 눌러주세요.',action:'open'},
-      {target:'#resultLayer .result-card',title:'정산표를 읽어보세요',text:'카테고리 정답 150 G와 위험도 정답 150 G가 각각 계산됩니다. 둘 다 맞히면 총 300 G입니다.',task:'정산 내역을 확인하면 첫 업무가 끝납니다.',action:'complete'}
-    ];
+    const tutorialText={
+      ko:{
+        main:{next:'서명 후 버튼을 눌러주세요',title:'업무 인수서에 서명하세요',text:'쌓여 있는 서류 중 마지막 인수 확인서입니다. 서명란에 서명하면 업무를 시작합니다.',task:'서명란에 직접 서명해주세요.'},
+        storage:{next:'구매 버튼을 직접 눌러주세요',title:'첫 상자를 준비하세요',text:'적재소는 감정할 상자를 구매해 보관하는 장소입니다. 일반 입고 가격은 200 G입니다.',task:'강조된 상자 구매 버튼을 눌러주세요.'},
+        move:{next:'감정소 이동을 눌러주세요',title:'작업장 사이를 이동하세요',text:'상자를 준비했으니 감정소로 옮겨야 합니다. 이후에도 하단 이동 버튼으로 두 작업장을 오갈 수 있습니다.',task:'강조된 감정소 이동 버튼을 눌러주세요.'},
+        buttons:{next:'확인했어요',complete:'튜토리얼 완료',action:'직접 조작해주세요'},
+        steps:[
+          {target:'[data-tool="weight"]',title:'첫 번째 단서를 조사하세요',text:'무게 측정은 내용물의 움직임과 무게 중심을 알려줍니다.',task:'강조된 무게 측정 버튼을 눌러주세요.',action:'tool',value:'weight'},
+          {target:'#guideCluesTarget',title:'조사 기록을 확인하세요',text:'방금 얻은 단서가 조사 기록에 추가됐습니다. 모든 결과는 정확하지만 표현은 간접적입니다.',task:'기록을 읽은 뒤 확인 버튼을 눌러주세요.',action:'next'},
+          {target:'[data-tool="surface"]',title:'안전성 단서를 더 찾으세요',text:'표면 흔적은 내부의 긁힘과 충격 흔적으로 안전성을 추리하는 데 도움을 줍니다.',task:'강조된 표면 흔적 버튼을 눌러주세요.',action:'tool',value:'surface'},
+          {target:'#guideGuessTarget',title:'판정을 입력하세요',text:'카테고리와 안전성을 선택해야 실제 내용물과 판정을 비교할 수 있습니다.',task:'카테고리와 안전성을 모두 선택해주세요.',action:'guess'},
+          {target:'#guideOpenTarget',title:'상자를 개봉하세요',text:'개봉하면 상자가 하나 소비되며, 카테고리와 안전성 중 맞힌 항목에 따라 보상을 받습니다.',task:'강조된 상자 개봉 버튼을 눌러주세요.',action:'open'},
+          {target:'#resultLayer .result-card',title:'정산표를 확인하세요',text:'카테고리와 안전성 보상은 별 등급별 최대 보상의 절반씩 계산됩니다.',task:'정산 내역을 확인하면 첫 업무가 끝납니다.',action:'complete'}
+        ]
+      },
+      ja:{
+        main:{next:'署名してください',title:'業務引継書に署名してください',text:'積まれた書類の中にある最後の業務引継確認書です。署名欄に署名すると業務を開始します。',task:'署名欄に直接署名してください。'},
+        storage:{next:'購入ボタンを押してください',title:'最初の箱を準備してください',text:'保管所は鑑定する箱を購入して保管する場所です。通常入荷の価格は200 Gです。',task:'強調されている箱購入ボタンを押してください。'},
+        move:{next:'鑑定所へ移動してください',title:'作業場所を移動してください',text:'箱を準備したので鑑定所へ運びます。以後も画面下部の移動ボタンで二つの作業場所を行き来できます。',task:'強調されている鑑定所への移動ボタンを押してください。'},
+        buttons:{next:'確認しました',complete:'チュートリアル完了',action:'画面を操作してください'},
+        steps:[
+          {target:'[data-tool="weight"]',title:'最初の手掛かりを調査してください',text:'重量測定では内容物の動きと重心を確認できます。',task:'強調されている重量測定ボタンを押してください。',action:'tool',value:'weight'},
+          {target:'#guideCluesTarget',title:'調査記録を確認してください',text:'得られた手掛かりが調査記録に追加されました。結果は常に正確ですが、表現は間接的です。',task:'記録を読んでから確認ボタンを押してください。',action:'next'},
+          {target:'[data-tool="surface"]',title:'安全性の手掛かりを探してください',text:'表面痕跡では内部の擦れや衝撃痕を確認し、安全性を推理できます。',task:'強調されている表面痕跡ボタンを押してください。',action:'tool',value:'surface'},
+          {target:'#guideGuessTarget',title:'判定を入力してください',text:'カテゴリーと安全性を選択すると、実際の内容物と判定を比較できます。',task:'カテゴリーと安全性を両方選択してください。',action:'guess'},
+          {target:'#guideOpenTarget',title:'箱を開封してください',text:'開封すると箱を一つ消費し、カテゴリーと安全性の正解項目に応じて報酬を獲得します。',task:'強調されている開封ボタンを押してください。',action:'open'},
+          {target:'#resultLayer .result-card',title:'精算表を確認してください',text:'カテゴリーと安全性の報酬は、星等級ごとの最大報酬を半分ずつに分けて計算します。',task:'精算内容を確認すると最初の業務が終了します。',action:'complete'}
+        ]
+      }
+    };
+    const currentTutorial=()=>tutorialText[currentLanguage]||tutorialText.ko;
+    const inspectionGuideSteps=()=>currentTutorial().steps;
     function renderGuideProgress(total,current){guideProgress.innerHTML=Array.from({length:total},(_,i)=>`<span class="${i<=current?'done':''}"></span>`).join('')}
     function positionGuide(targetSelector,title,text,kicker='FIRST SHIFT',task='강조된 부분을 확인하세요.'){
       const target=$(targetSelector);if(!target)return;const rect=target.getBoundingClientRect(),pad=8;
@@ -597,18 +621,18 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.181.1/build/three.m
       guideKicker.textContent=kicker;guideTitle.textContent=title;guideText.textContent=text;guideTask.textContent=task;
       let left=rect.right+18,top=Math.max(18,rect.top);if(left+380>innerWidth-18)left=Math.max(18,rect.left-398);if(top+300>innerHeight-18)top=Math.max(18,innerHeight-318);guideCard.style.left=`${left}px`;guideCard.style.top=`${top}px`;
     }
-    function startMainGuide(){if(state.tutorialDone)return;onboardingActive=true;guideMode='main';guideIndex=0;guideOverlay.classList.remove('hidden');guideNext.textContent='서명 후 버튼을 눌러주세요';guideNext.disabled=true;renderGuideProgress(9,0);positionGuide('#workerSignature','업무 인수서에 서명하세요','쌓여 있는 서류 중 마지막 인수 확인서입니다. 빈칸에 이름을 입력한 뒤 업무 인수 버튼을 눌러주세요.','FIRST SHIFT · 1 / 9','서명란에 이름을 입력하고 아래 버튼을 눌러주세요.')}
-    function startStorageGuide(){guideMode='storage';guideIndex=0;guideOverlay.classList.remove('hidden');guideNext.textContent='구매 버튼을 직접 눌러주세요';guideNext.disabled=true;renderGuideProgress(8,0);positionGuide('#buyBoxButton','첫 상자를 준비하세요','적재소는 감정할 상자를 사서 보관하는 장소입니다. 상자 가격은 200 G입니다.','FIRST SHIFT · 1 / 8','강조된 상자 1개 구매 버튼을 직접 눌러주세요.')}
-    function startMoveGuide(){guideMode='move';guideIndex=0;guideOverlay.classList.remove('hidden');guideNext.textContent='감정소 이동을 눌러주세요';guideNext.disabled=true;renderGuideProgress(8,1);positionGuide('#goInspectionButton','작업장 사이를 이동하세요','상자를 준비했으니 이제 감정소로 옮겨야 합니다. 이후에도 하단 이동 버튼으로 적재소와 감정소를 오갈 수 있습니다.','FIRST SHIFT · 2 / 8','강조된 감정소 이동 버튼을 직접 눌러주세요.')}
+    function startMainGuide(){if(state.tutorialDone)return;const t=currentTutorial().main;onboardingActive=true;guideMode='main';guideIndex=0;guideOverlay.classList.remove('hidden');guideNext.textContent=t.next;guideNext.disabled=true;renderGuideProgress(9,0);positionGuide('#workerSignature',t.title,t.text,'FIRST SHIFT · 1 / 9',t.task)}
+    function startStorageGuide(){const t=currentTutorial().storage;guideMode='storage';guideIndex=0;guideOverlay.classList.remove('hidden');guideNext.textContent=t.next;guideNext.disabled=true;renderGuideProgress(8,0);positionGuide('#buyBoxButton',t.title,t.text,'FIRST SHIFT · 1 / 8',t.task)}
+    function startMoveGuide(){const t=currentTutorial().move;guideMode='move';guideIndex=0;guideOverlay.classList.remove('hidden');guideNext.textContent=t.next;guideNext.disabled=true;renderGuideProgress(8,1);positionGuide('#goInspectionButton',t.title,t.text,'FIRST SHIFT · 2 / 8',t.task)}
     function startInspectionGuide(){guideMode='inspection';guideIndex=0;guideOverlay.classList.remove('hidden');updateInspectionGuide()}
-    function updateInspectionGuide(){const step=inspectionGuideSteps[guideIndex];guideNext.disabled=step.action!=='next'&&step.action!=='complete';guideNext.textContent=step.action==='next'?'확인했어요':step.action==='complete'?'튜토리얼 완료':'직접 조작해주세요';renderGuideProgress(8,guideIndex+2);positionGuide(step.target,step.title,step.text,`FIRST SHIFT · ${guideIndex+3} / 8`,step.task)}
+    function updateInspectionGuide(){const step=inspectionGuideSteps()[guideIndex],buttons=currentTutorial().buttons;guideNext.disabled=step.action!=='next'&&step.action!=='complete';guideNext.textContent=step.action==='next'?buttons.next:step.action==='complete'?buttons.complete:buttons.action;renderGuideProgress(8,guideIndex+2);positionGuide(step.target,step.title,step.text,`FIRST SHIFT · ${guideIndex+3} / 8`,step.task)}
     function advanceInspectionGuide(expectedAction,value=''){
       if(!onboardingActive||guideMode!=='inspection')return;
-      const step=inspectionGuideSteps[guideIndex];if(!step||step.action!==expectedAction)return;if(value&&step.value!==value)return;
-      if(guideIndex<inspectionGuideSteps.length-1){guideIndex++;setTimeout(updateInspectionGuide,220)}
+      const steps=inspectionGuideSteps(),step=steps[guideIndex];if(!step||step.action!==expectedAction)return;if(value&&step.value!==value)return;
+      if(guideIndex<steps.length-1){guideIndex++;setTimeout(updateInspectionGuide,220)}
     }
     function closeGuide(complete=false){guideOverlay.classList.add('hidden');if(complete){onboardingActive=false;state.tutorialDone=true;saveState();updateMainFirstRun()}}
-    guideNext.onclick=()=>{if(guideMode==='inspection'){const step=inspectionGuideSteps[guideIndex];if(step.action==='next')advanceInspectionGuide('next');else if(step.action==='complete')closeGuide(true)}};
+    guideNext.onclick=()=>{if(guideMode==='inspection'){const step=inspectionGuideSteps()[guideIndex];if(step.action==='next')advanceInspectionGuide('next');else if(step.action==='complete')closeGuide(true)}};
     guideSkip.onclick=()=>closeGuide(true);
 
     createTools();updateGlobalUI();updateStorageUI();beginCurrentBox();renderCollection();updateMainFirstRun();updateSoundButtons();setTimeout(resizeSignaturePad,80);
@@ -616,7 +640,7 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.181.1/build/three.m
 
     function resizeRenderer(pack,element){const w=element.clientWidth,h=element.clientHeight;if(w<=0||h<=0)return;pack.renderer.setSize(w,h,false);pack.camera.aspect=w/h;pack.camera.updateProjectionMatrix()}
     function resizeInspection(){resizeRenderer(inspectionPack,$('#inspectionScene'))}function resizeStorage(){resizeRenderer(storagePack,$('#storageScene'))}
-    addEventListener('resize',()=>{resizeInspection();resizeStorage();resizeSignaturePad();if(!guideOverlay.classList.contains('hidden')){if(guideMode==='storage')positionGuide('#buyBoxButton','첫 상자를 준비하세요','적재소는 감정할 상자를 사서 보관하는 장소입니다. 상자 가격은 200 G입니다.','FIRST SHIFT · 1 / 8','강조된 상자 1개 구매 버튼을 직접 눌러주세요.');else if(guideMode==='move')positionGuide('#goInspectionButton','작업장 사이를 이동하세요','상자를 준비했으니 이제 감정소로 옮겨야 합니다. 이후에도 하단 이동 버튼으로 적재소와 감정소를 오갈 수 있습니다.','FIRST SHIFT · 2 / 8','강조된 감정소 이동 버튼을 직접 눌러주세요.');else if(guideMode==='inspection')updateInspectionGuide()}});
+    addEventListener('resize',()=>{resizeInspection();resizeStorage();resizeSignaturePad();if(!guideOverlay.classList.contains('hidden')){if(guideMode==='storage'){const t=currentTutorial().storage;positionGuide('#buyBoxButton',t.title,t.text,'FIRST SHIFT · 1 / 8',t.task)}else if(guideMode==='move'){const t=currentTutorial().move;positionGuide('#goInspectionButton',t.title,t.text,'FIRST SHIFT · 2 / 8',t.task)}else if(guideMode==='inspection')updateInspectionGuide()}});
     const clock=new THREE.Clock();
     function animate(){requestAnimationFrame(animate);const d=Math.min(clock.getDelta(),.05),t=clock.elapsedTime;
       if(current&&insMode==='idle')inspectionRoot.position.y=.02+Math.sin(t*1.2)*.018;else if(insMode!=='idle'){insTime+=d;const p=Math.min(insTime/.75,1);if(insMode==='lift')inspectionRoot.position.y=.02+Math.sin(p*Math.PI)*.26;else inspectionRoot.rotation.z=Math.sin(p*Math.PI*6)*Math.sin(p*Math.PI)*.035;if(p>=1){insMode='idle';inspectionRoot.position.set(0,.02,0);inspectionRoot.rotation.z=0}}
