@@ -148,12 +148,19 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.181.1/build/three.m
       '내부에서 체온성 열원이 움직입니다.':'内部で体温に近い熱源が動いています。','무게 중심이 계속 이동합니다.':'重心が継続的に移動しています。','생물성 형체가 감지됩니다.':'生体らしい形状が検出されました。','생체 반응이 검출됩니다.':'生体反応が検出されました。',
       '내부 온도는 거의 변하지 않습니다.':'内部温度にほとんど変化はありません。','작고 밀도 높은 물체가 들어 있습니다.':'小さく密度の高い内容物です。','정교하게 가공된 물체가 보입니다.':'精巧に加工された形状が確認できます。','금속, 종이 또는 보존 성분이 검출됩니다.':'金属、紙、または保存処理成分が検出されました。',
       '일부 구역에서 비정상적인 열이 감지됩니다.':'一部で異常な熱が検出されました。','한쪽에 고밀도 물질이 몰려 있습니다.':'高密度の物質が片側に集中しています。','선, 용기, 압축된 물질이 함께 보입니다.':'配線、容器、圧縮物質を含む構造が見えます。','연소성 또는 반응성 물질이 검출됩니다.':'可燃性または反応性物質が検出されました。',
-      '특별한 열 변화가 없습니다.':'特別な温度変化はありません。','여러 물체가 불규칙하게 섞여 있습니다.':'重心と形状が不規則です。','용도가 서로 다른 물건들이 겹쳐 있습니다.':'用途を特定しにくい複雑な形状です。','먼지, 녹, 합성수지 성분이 섞여 나옵니다.':'ほこり、さび、合成樹脂系の成分が検出されました。',
+      '특별한 열 변화가 없습니다.':'特別な温度変化はありません。','여러 물체가 불규칙하게 섞여 있습니다.':'重心と形状が不規則です。','용도가 서로 다른 물건들이 겹쳐 있습니다.':'用途を特定しにくい複雑な形状です。','먼지, 녹, 합성수지 성분이 섞여 나옵니다.':'ほこり、さび、合成樹脂系の成分が検出されました。','무게 중심이 불안정하고 형태가 일정하지 않습니다.':'重心が不安定で、形状も均一ではありません。','용도를 특정하기 어려운 복잡한 형태가 보입니다.':'用途を特定しにくい複雑な形状が確認できます。','먼지, 녹 또는 합성수지 계열 성분이 검출됩니다.':'ほこり、さび、または合成樹脂系の成分が検出されました。',
       '깊은 긁힘과 충격 흔적이 여러 개 있습니다.':'深い傷と強い衝撃痕があります。','얕은 긁힘과 마찰 자국이 발견됩니다.':'浅い傷と摩擦痕が見つかりました。','큰 손상 없이 비교적 깨끗합니다.':'大きな損傷はなく比較的きれいです。',
       '고위험 화물용 이중 봉인이 사용됐습니다.':'高危険貨物用の二重封印が使われています。','표준 봉인에 보조 잠금이 추가돼 있습니다.':'標準封印に補助ロックが追加されています。','일반 운송용 봉인이 정상적으로 유지됩니다.':'一般輸送用の封印が正常に保たれています。',
       '완벽한 감정':'完全鑑定','부분 감정 성공':'一部鑑定成功','감정 실패':'鑑定失敗','실제 물품':'実際の品物','설명':'説明','실제 카테고리':'実際のカテゴリー','실제 위험도':'実際の安全性','카테고리 추리':'カテゴリー判定','위험도 추리':'安全性判定','총 보상':'合計報酬','정답':'正解','오답':'不正解',
       '보유한 상자가 없습니다.':'保有している箱はありません。','보관 한도 15개':'保管上限15個','보관 한도에 도달했습니다. 감정소에서 상자를 처리하세요.':'保管上限に達しました。鑑定所で箱を処理してください。','한 더미에 5개씩, 최대 15개까지 보관할 수 있습니다.':'1列5個、最大15個まで保管できます。','적재 중':'個を保管中','미감정 상태':'未鑑定状態',
-      '보유 상자를 모두 비울까요?':'保有している箱をすべて削除しますか？','돈과 보유 상자를 처음 상태로 되돌릴까요?':'資金と保有箱を初期状態に戻しますか？'
+      '보유 상자를 모두 비울까요?':'保有している箱をすべて削除しますか？','돈과 보유 상자를 처음 상태로 되돌릴까요?':'資金と保有箱を初期状態に戻しますか？',
+      '첫 상자를 준비하세요':'最初の箱を用意してください','적재소는 감정할 상자를 사서 보관하는 장소입니다. 상자 가격은 200 G입니다.':'保管所は鑑定する箱を購入して保管する場所です。箱の価格は200 Gです。','강조된 상자 1개 구매 버튼을 직접 눌러주세요.':'強調されている「箱を1個購入」ボタンを押してください。','구매 버튼을 직접 눌러주세요':'購入ボタンを押してください',
+      '작업장 사이를 이동하세요':'作業場所を移動してください','상자를 준비했으니 이제 감정소로 옮겨야 합니다. 이후에도 하단 이동 버튼으로 적재소와 감정소를 오갈 수 있습니다.':'箱を用意したので、鑑定所へ移動します。以後も画面下部の移動ボタンで保管所と鑑定所を行き来できます。','강조된 감정소 이동 버튼을 직접 눌러주세요.':'強調されている「鑑定所へ移動」ボタンを押してください。','감정소 이동을 눌러주세요':'鑑定所への移動を押してください',
+      '첫 번째 단서를 직접 조사하세요':'最初の手掛かりを調査してください','무게 측정은 내용물의 움직임과 무게 중심을 알려줍니다.':'重量測定では内容物の動きと重心を確認できます。','강조된 무게 측정 버튼을 눌러주세요.':'強調されている重量測定ボタンを押してください。','조사 기록을 확인하세요':'調査記録を確認してください','방금 얻은 단서가 조사 기록에 추가됐습니다. 모든 결과는 정확하지만 표현은 간접적입니다.':'取得した手掛かりが調査記録に追加されました。結果はすべて正確ですが、表現は間接的です。','기록을 읽은 뒤 아래 확인 버튼을 눌러주세요.':'記録を読んだ後、下の確認ボタンを押してください。','확인했어요':'確認しました',
+      '안전성 단서를 하나 더 찾으세요':'安全性の手掛かりをもう一つ調べてください','위험도 단서를 하나 더 찾으세요':'安全性の手掛かりをもう一つ調べてください','표면 흔적은 상자 안쪽의 긁힘과 충격 흔적으로 위험도를 알려줍니다.':'表面痕跡では箱内部の傷や衝撃痕から安全性を推測できます。','강조된 표면 흔적 버튼을 눌러주세요.':'強調されている表面痕跡ボタンを押してください。','판정을 직접 입력하세요':'判定を入力してください','카테고리와 위험도를 선택해야 개봉 결과와 비교할 수 있습니다.':'カテゴリーと安全性を選択すると、開封結果と比較できます。','카테고리와 위험도를 모두 선택해주세요.':'カテゴリーと安全性を両方選択してください。',
+      '상자를 개봉해 답을 확인하세요':'箱を開封して答えを確認してください','개봉하면 상자 한 개가 소비되고 카테고리와 위험도 정답마다 150 G를 받습니다.':'開封すると箱を1個消費し、カテゴリーと安全性の正解項目ごとに報酬を獲得します。','강조된 상자 개봉 버튼을 눌러주세요.':'強調されている箱開封ボタンを押してください。','정산표를 읽어보세요':'精算表を確認してください','카테고리 정답 150 G와 위험도 정답 150 G가 각각 계산됩니다. 둘 다 맞히면 총 300 G입니다.':'カテゴリーと安全性の報酬がそれぞれ計算されます。星1の箱では両方正解で合計300 Gです。','정산 내역을 확인하면 첫 업무가 끝납니다.':'精算内容を確認すると最初の業務が完了します。','튜토리얼 완료':'チュートリアル完了','직접 조작해주세요':'画面を操作してください',
+      '업무 인수서에 서명하세요':'業務引継書に署名してください','쌓여 있는 서류 중 마지막 인수 확인서입니다. 빈칸에 이름을 입력한 뒤 업무 인수 버튼을 눌러주세요.':'積まれた書類の最後にある引継確認書です。署名欄に名前を入力してから業務引継ボタンを押してください。','서명란에 이름을 입력하고 아래 버튼을 눌러주세요.':'署名欄に名前を入力し、下のボタンを押してください。','서명 후 버튼을 눌러주세요':'署名後にボタンを押してください',
+      '효과음 OFF':'効果音 OFF','효과음 ON':'効果音 ON','구매 완료':'購入完了','잔액이 부족합니다.':'残高が不足しています。','카테고리와 안전성을 모두 선택하세요.':'カテゴリーと安全性を両方選択してください。'
     };
 
     const itemJa={
@@ -179,6 +186,7 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.181.1/build/three.m
       const trimmed=text.trim();
       if(jaText[trimmed])return text.replace(trimmed,jaText[trimmed]);
       let out=text;
+      Object.entries(jaText).sort((a,b)=>b[0].length-a[0].length).forEach(([ko,ja])=>{if(out.includes(ko))out=out.split(ko).join(ja)});
       const patterns=[
         [/보유 상자 (\d+) \/ (\d+)개/g,'保有箱 $1 / $2個'],[/보유 상자 (\d+)개/g,'保有箱 $1個'],[/^(\d+)개$/,'$1個'],[/^(\d+)개 적재 중$/,'$1個を保管中'],
         [/발견 (\d+) \/ (\d+)/g,'発見 $1 / $2'],[/(\d+) \/ (\d+) 발견/g,'$1 / $2 発見'],[/연속 (\d+)/g,'連続 $1'],
@@ -199,6 +207,7 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.181.1/build/three.m
       document.documentElement.lang=currentLanguage;
       document.title=currentLanguage==='ja'?'箱鑑定所':'상자 감정소';
       if(currentLanguage==='ja')translateNode(document.body);
+      startLanguageObserver();updateSoundButtons();
       createTools();updateGlobalUI();updateStorageUI(false);updateInspectionUI();renderCollection?.();
     }
     function chooseLanguage(lang){
@@ -207,6 +216,56 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.181.1/build/three.m
       $('#languageSelect')?.classList.add('hidden');
       applyLanguage();
     }
+
+
+    // 일본어 선택 후 동적으로 만들어지는 문구도 즉시 번역합니다.
+    let languageObserver=null;
+    function startLanguageObserver(){
+      languageObserver?.disconnect();
+      if(currentLanguage!=='ja')return;
+      languageObserver=new MutationObserver(records=>{
+        languageObserver.disconnect();
+        records.forEach(record=>{
+          record.addedNodes.forEach(node=>translateNode(node));
+          if(record.type==='characterData')translateNode(record.target);
+        });
+        languageObserver.observe(document.body,{subtree:true,childList:true,characterData:true});
+      });
+      languageObserver.observe(document.body,{subtree:true,childList:true,characterData:true});
+    }
+
+    // 외부 음원 없이 동작하는 짧은 UI 효과음
+    const SOUND_KEY='box_appraisal_sound';
+    let soundEnabled=(()=>{try{return localStorage.getItem(SOUND_KEY)!=='off'}catch(error){return true}})();
+    let audioContext=null;
+    function getAudioContext(){
+      if(!soundEnabled)return null;
+      const Context=window.AudioContext||window.webkitAudioContext;
+      if(!Context)return null;
+      audioContext ||= new Context();
+      if(audioContext.state==='suspended')audioContext.resume().catch(()=>{});
+      return audioContext;
+    }
+    function tone(frequency=440,duration=.06,type='sine',volume=.035,delay=0){
+      const ctx=getAudioContext();if(!ctx)return;
+      const osc=ctx.createOscillator(),gain=ctx.createGain(),now=ctx.currentTime+delay;
+      osc.type=type;osc.frequency.setValueAtTime(frequency,now);
+      gain.gain.setValueAtTime(.0001,now);gain.gain.exponentialRampToValueAtTime(Math.max(.0002,volume),now+.008);gain.gain.exponentialRampToValueAtTime(.0001,now+duration);
+      osc.connect(gain);gain.connect(ctx.destination);osc.start(now);osc.stop(now+duration+.02);
+    }
+    function playSound(kind='click'){
+      if(!soundEnabled)return;
+      if(kind==='buy'){tone(240,.07,'square',.025);tone(360,.09,'sine',.03,.055)}
+      else if(kind==='inspect'){tone(520,.05,'triangle',.024);tone(680,.06,'triangle',.02,.045)}
+      else if(kind==='open'){tone(150,.09,'sawtooth',.025);tone(95,.13,'sine',.035,.07)}
+      else if(kind==='success'){tone(440,.08,'sine',.035);tone(660,.11,'sine',.04,.08)}
+      else if(kind==='fail'){tone(220,.1,'square',.025);tone(165,.14,'sine',.03,.08)}
+      else tone(410,.045,'sine',.018);
+    }
+    function updateSoundButtons(){
+      document.querySelectorAll('.sound-toggle').forEach(button=>button.textContent=currentLanguage==='ja'?(soundEnabled?'効果音 ON':'効果音 OFF'):(soundEnabled?'효과음 ON':'효과음 OFF'));
+    }
+    function toggleSound(){soundEnabled=!soundEnabled;try{localStorage.setItem(SOUND_KEY,soundEnabled?'on':'off')}catch(error){};updateSoundButtons();if(soundEnabled)playSound('success')}
 
 
 
@@ -276,7 +335,7 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.181.1/build/three.m
         mimic:{temperature:['내부에서 체온성 열원이 움직입니다.'],weight:['무게 중심이 계속 이동합니다.'],scan:['생물성 형체가 감지됩니다.'],reagent:['생체 반응이 검출됩니다.']},
         treasure:{temperature:['내부 온도는 거의 변하지 않습니다.'],weight:['작고 밀도 높은 물체가 들어 있습니다.'],scan:['정교하게 가공된 물체가 보입니다.'],reagent:['금속, 종이 또는 보존 성분이 검출됩니다.']},
         explosive:{temperature:['일부 구역에서 비정상적인 열이 감지됩니다.'],weight:['한쪽에 고밀도 물질이 몰려 있습니다.'],scan:['선, 용기, 압축된 물질이 함께 보입니다.'],reagent:['연소성 또는 반응성 물질이 검출됩니다.']},
-        junk:{temperature:['특별한 열 변화가 없습니다.'],weight:['여러 물체가 불규칙하게 섞여 있습니다.'],scan:['용도가 서로 다른 물건들이 겹쳐 있습니다.'],reagent:['먼지, 녹, 합성수지 성분이 섞여 나옵니다.']}
+        junk:{temperature:['특별한 열 변화가 없습니다.'],weight:['무게 중심이 불안정하고 형태가 일정하지 않습니다.'],scan:['용도를 특정하기 어려운 복잡한 형태가 보입니다.'],reagent:['먼지, 녹 또는 합성수지 계열 성분이 검출됩니다.']}
       };
       if(id==='temperature')return pick(categoryClues[current.content].temperature);
       if(id==='weight')return pick(categoryClues[current.content].weight);
@@ -289,9 +348,9 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.181.1/build/three.m
 
     function createTools(){
       const list=$('#toolList');list.innerHTML='';
-      tools.forEach(t=>{const b=document.createElement('button');b.className='tool-button';b.dataset.tool=t.id;b.innerHTML=`<span class="tool-icon">${t.icon}</span><span><span class="tool-name">${t.name}</span><span class="tool-info">${t.info}</span></span><span class="tool-accuracy">정확</span>`;b.onclick=()=>inspect(t);list.appendChild(b)});
+      tools.forEach(t=>{const b=document.createElement('button');b.className='tool-button';b.dataset.tool=t.id;b.innerHTML=`<span class="tool-icon">${t.icon}</span><span><span class="tool-name">${translateString(t.name)}</span><span class="tool-info">${translateString(t.info)}</span></span><span class="tool-accuracy">${translateString('정확')}</span>`;b.onclick=()=>inspect(t);list.appendChild(b)});
     }
-    function inspect(tool){if(!current||resolved||used>=4)return;used++;results.push({id:tool.id,name:tool.name,text:truthful(tool.id)});insMode=tool.id==='weight'?'lift':'inspect';insTime=0;updateInspectionUI();advanceInspectionGuide('tool',tool.id)}
+    function inspect(tool){if(!current||resolved||used>=4)return;playSound('inspect');used++;results.push({id:tool.id,name:translateString(tool.name),text:translateString(truthful(tool.id))});insMode=tool.id==='weight'?'lift':'inspect';insTime=0;updateInspectionUI();advanceInspectionGuide('tool',tool.id)}
 
     function beginCurrentBox(){
       current=state.boxes.length?state.boxes[0]:null;if(current&&!itemCatalog[current.content])current.content='mimic';used=0;results=[];resolved=false;$('#contentGuess').value='unknown';$('#riskGuess').value='unknown';$('#resultLayer').classList.remove('show');
@@ -308,6 +367,7 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.181.1/build/three.m
     }
     function resolveAction(action){
       if(!current||resolved||action!=="open")return;
+      playSound('open');
       resolved=true;
       const category=itemCatalog[current.content]||itemCatalog.mimic;
       const item=category.items[current.itemIndex]||category.items[0];
@@ -327,7 +387,7 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.181.1/build/three.m
       saveState();
 
       $('#resultKicker').textContent='ANSWER CHECK';
-      $('#resultTitle').textContent=categoryCorrect&&riskCorrect?'완벽한 감정':categoryCorrect||riskCorrect?'부분 감정 성공':'감정 실패';
+      $('#resultTitle').textContent=categoryCorrect&&riskCorrect?'완벽한 감정':categoryCorrect||riskCorrect?'부분 감정 성공':'감정 실패';playSound(categoryCorrect||riskCorrect?'success':'fail');
       $('#resultDescription').textContent=currentLanguage==='ja'?`箱を開けて「${localized.name}」を確認しました。`:`상자를 열어 ${item.name}을(를) 확인했습니다.`;
       $('#resultMoney').textContent=`+${money(reward)}`;
       $('#resultMoney').style.color=reward>0?'var(--green)':'var(--sub)';
@@ -406,7 +466,7 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.181.1/build/three.m
       if(onboardingActive&&onboardingPurchased){onboardingPurchased=false;setTimeout(startMoveGuide,360)}
     }
 
-    function buyBox(){
+    function buyBox(){playSound('buy');
       if(storageAnimating||state.money<BOX_PRICE||state.boxes.length>=MAX_BOXES)return;
       const newIndex=state.boxes.length;
       storageAnimating=true;
@@ -511,8 +571,10 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.181.1/build/three.m
     $('#modeCollectionButton').onclick=()=>openCollection(mainMenu);$('#menuCollectionQuick').onclick=()=>openCollection(mainMenu);$('#inspectionCollection').onclick=()=>openCollection(inspectionGame);$('#collectionHome').onclick=()=>{showScreen(collectionReturnScreen);if(collectionReturnScreen===inspectionGame){updateInspectionUI();resizeInspection()}else if(collectionReturnScreen===storageGame){updateStorageUI();resizeStorage()}};
     $('#selectKorean').onclick=()=>chooseLanguage('ko');$('#selectJapanese').onclick=()=>chooseLanguage('ja');
     $('#buyBoxButton').onclick=buyBox;$('#buyAnotherButton').onclick=buyBox;
-    $('#clearBoxesButton').onclick=()=>{if(confirm('보유 상자를 모두 비울까요?')){state.boxes=[];saveState();updateStorageUI()}};
+    $('#clearBoxesButton').onclick=()=>{if(confirm(translateString('보유 상자를 모두 비울까요?'))){state.boxes=[];saveState();updateStorageUI()}};
     const resetAllData=()=>{const message=currentLanguage==='ja'?'資金、保有箱、図鑑を初期状態に戻しますか？':'돈, 보유 상자, 도감 기록을 처음 상태로 되돌릴까요?';if(confirm(message)){state={money:1000,boxes:[],tutorialDone:false,collection:{}};saveState();beginCurrentBox();updateStorageUI();renderCollection();goMain()}};$('#resetSaveButton').onclick=resetAllData;$('#resetSaveQuick').onclick=resetAllData;
+    document.querySelectorAll('.sound-toggle').forEach(button=>button.onclick=toggleSound);
+    document.addEventListener('pointerdown',event=>{const button=event.target.closest('button');if(button&&!button.classList.contains('sound-toggle'))playSound('click')},{passive:true});
     $('#ruleButton').onclick=()=>$('#ruleOverlay').classList.remove('hidden');$('#ruleClose').onclick=()=>$('#ruleOverlay').classList.add('hidden');
     $('#resultNext').onclick=()=>{if(state.boxes.length)beginCurrentBox();else goStorage()};
     $$('#inspectionGame .action-button').forEach(b=>b.onclick=()=>resolveAction(b.dataset.action));
@@ -549,7 +611,7 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.181.1/build/three.m
     guideNext.onclick=()=>{if(guideMode==='inspection'){const step=inspectionGuideSteps[guideIndex];if(step.action==='next')advanceInspectionGuide('next');else if(step.action==='complete')closeGuide(true)}};
     guideSkip.onclick=()=>closeGuide(true);
 
-    createTools();updateGlobalUI();updateStorageUI();beginCurrentBox();renderCollection();updateMainFirstRun();setTimeout(resizeSignaturePad,80);
+    createTools();updateGlobalUI();updateStorageUI();beginCurrentBox();renderCollection();updateMainFirstRun();updateSoundButtons();setTimeout(resizeSignaturePad,80);
     const savedLanguage=localStorage.getItem(LANGUAGE_KEY);if(savedLanguage==='ja'||savedLanguage==='ko')$('#languageSelect').dataset.previous=savedLanguage;
 
     function resizeRenderer(pack,element){const w=element.clientWidth,h=element.clientHeight;if(w<=0||h<=0)return;pack.renderer.setSize(w,h,false);pack.camera.aspect=w/h;pack.camera.updateProjectionMatrix()}
