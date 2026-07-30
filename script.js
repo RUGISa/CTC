@@ -544,3 +544,17 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.181.1/build/three.m
     if(savedLanguage==='ko'||savedLanguage==='ja')chooseLanguage(savedLanguage);
 
     resizeInspection();resizeStorage();animate();
+
+// macOS Chrome/Safari can report 100vh larger than the visible page area.
+// Keep the menu height synced to the actual visual viewport so its right pane can scroll.
+(function setupVisibleViewportHeight(){
+  const update = () => {
+    const height = window.visualViewport?.height || window.innerHeight || document.documentElement.clientHeight;
+    document.documentElement.style.setProperty('--app-height', `${Math.round(height)}px`);
+  };
+  update();
+  window.addEventListener('resize', update, { passive:true });
+  window.addEventListener('orientationchange', update, { passive:true });
+  window.visualViewport?.addEventListener('resize', update, { passive:true });
+  window.visualViewport?.addEventListener('scroll', update, { passive:true });
+})();
