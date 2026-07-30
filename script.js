@@ -1,14 +1,19 @@
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.181.1/build/three.module.js";
 
     const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
-    const STORE_KEY='box_appraisal_connected_v1';
-    const BOX_PRICE=200;
-    const CATEGORY_REWARD=150;
-    const RISK_REWARD=150;
+    const STORE_KEY='box_appraisal_connected_v3';
+    const LEGACY_KEYS=['box_appraisal_connected_v1','box_appraisal_connected_v2'];
     const MAX_BOXES=15;
+    const GRADE_REWARDS=[300,450,650,900,1200];
+    const PURCHASES={
+      standard:{label:'일반 입고',price:200,note:'1~3성 중심의 기본 입고입니다.',weights:[42,28,17,9,4]},
+      safe:{label:'안전 입고',price:260,note:'낮은 등급과 안전 물품의 비중이 높습니다.',weights:[55,28,12,4,1],category:'safe'},
+      premium:{label:'고급 입고',price:500,note:'3~5성 상자가 나올 확률이 높습니다.',weights:[8,17,30,28,17]},
+      seized:{label:'압류품 입고',price:150,note:'저렴하지만 위험·폭발물 비중이 높습니다.',weights:[48,28,15,7,2],category:'seized'},
+      auction:{label:'미확인 경매',price:350,note:'등급 분포가 넓고 결과를 예측하기 어렵습니다.',weights:[20,20,20,20,20]}
+    };
     const riskLabel={safe:'안전',warning:'주의',danger:'위험'};
     const chestNames=['나무 상자','은 상자','금 상자','다이아 상자','봉인된 상자'];
-    const chestValues=[450,518,585,653,720];
     const palettes=[
       {body:0x765437,panel:0x8a6442,trim:0x373633,accent:0x9e7b52,m:.08,r:.82},
       {body:0x6d7478,panel:0x858b8e,trim:0xb1b4b4,accent:0x494f52,m:.72,r:.34},
@@ -102,196 +107,49 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.181.1/build/three.m
         ]
       }
     };
-    // ==============================
-    // 한국어 / 일본어 언어 지원
-    // ==============================
-    let currentLanguage='ko';
-    const LANGUAGE_KEY='box_appraisal_language';
-    const jaText={
-      '상자 감정소':'箱鑑定所','도감':'図鑑','초기화':'初期化','저장 데이터 초기화':'セーブデータを初期化',
-      'FORM A-01 · 신규 작업자 등록':'FORM A-01 · 新規作業員登録','업무 인수 확인서':'業務引継確認書',
-      '본인은 적재소에서 미감정 상자를 구매하고, 감정소에서 조사 결과를 바탕으로 내용물의 카테고리와 안전성을 판정한 뒤 개봉하는 업무를 인수합니다.':'私は保管所で未鑑定の箱を購入し、鑑定所で調査結果をもとに内容物のカテゴリーと安全性を判定してから開封する業務を引き継ぎます。',
-      '상자는 적재소에서 한 개씩 구매하며 최대 15개까지 보관합니다.':'箱は保管所で1個ずつ購入し、最大15個まで保管できます。',
-      '보유 상자는 감정소에서 개봉할 때마다 한 개씩 차감됩니다.':'保有している箱は鑑定所で開封するたびに1個ずつ消費されます。',
-      '판정 보상으로 얻은 금액은 다음 상자 구매에 다시 사용할 수 있습니다.':'判定報酬で得た資金は次の箱の購入に使用できます。',
-      '업무용 도감이 지급되며 조사 단서와 후보 물품을 비교하는 데 사용할 수 있습니다.':'業務用図鑑が支給され、調査の手掛かりと候補品の比較に利用できます。',
-      '작업자 서명':'作業員署名','마우스로 이곳에 서명하세요':'マウスでここに署名してください','서명을 마치고 마우스를 떼면 적재소로 이동합니다.':'署名を終えてマウスを離すと保管所へ移動します。',
-      '사고,':'買って、','쌓고,':'積んで、','감정한다':'鑑定する',
-      '적재소에서 상자를 구매해 보관하고, 감정소에서 상자를 하나씩 꺼내 조사하고 처리합니다. 번 돈으로 다시 상자를 사며 계속 이어집니다.':'保管所で箱を購入して保管し、鑑定所で1箱ずつ調査して処理します。得た資金で次の箱を購入し、業務を続けます。',
-      '임무 시작':'業務開始','상자 적재소':'箱保管所','상자 도감':'箱図鑑',
-      '보유한 상자를 한 개 꺼내 네 번 조사하고 카테고리와 안전성을 맞힌 뒤 개봉합니다.':'保有中の箱を取り出し、4回調査してカテゴリーと安全性を判定した後に開封します。',
-      '돈으로 상자를 구매해 보관합니다. 한 더미에 5개씩, 최대 15개까지 쌓이며 감정소에서 사용됩니다.':'資金で箱を購入して保管します。1列5個、最大15個まで積み上げられ、鑑定所で使用されます。',
-      '개봉해서 발견한 물품과 최고 별 등급을 카테고리별로 확인합니다.':'開封して発見した品物と最高星等級をカテゴリー別に確認します。',
-      '적재소에서 가져온 상자를 감정합니다.':'保管所から運ばれた箱を鑑定します。','규정':'規定','조사 도구':'調査道具',
-      '조사 결과는 항상 정확합니다. 다만 정답을 직접 말하지 않고 특징만 보여줍니다.':'調査結果は常に正確です。ただし答えを直接示さず、特徴のみを表示します。',
-      '적재소 연계':'保管所連携','개봉하면 현재 상자 한 개가 보관 목록에서 빠집니다. 남은 상자가 없으면 적재소에서 다시 구매해야 합니다.':'開封すると現在の箱が保管一覧から1個減ります。箱がなくなった場合は保管所で再購入してください。',
-      '상자 없음':'箱なし','적재소에서 상자를 구매하세요':'保管所で箱を購入してください','감정할 상자가 없습니다':'鑑定する箱がありません',
-      '적재소에서 상자를 구매하면 이곳에서 바로 조사할 수 있습니다.':'保管所で箱を購入すると、ここですぐに調査できます。','적재소로 이동':'保管所へ移動','개봉 중':'開封中','정답 공개':'答えを公開','다음 상자':'次の箱',
-      '조사 기록':'調査記録','아직 기록된 조사 결과가 없습니다.':'まだ調査結果は記録されていません。','최종 추리':'最終推理',
-      '조사 결과를 바탕으로 카테고리와 안전성을 선택한 뒤 상자를 개봉하세요.':'調査結果をもとにカテゴリーと安全性を選択してから箱を開封してください。',
-      '예상 카테고리':'予想カテゴリー','판단 보류':'判断保留','생물':'生物','귀중품':'貴重品','폭발물':'爆発物','잡동사니':'雑貨',
-      '예상 안전성':'予想安全性','안전':'安全','주의':'注意','위험':'危険','상자 개봉':'箱を開封','추리 결과 확인':'推理結果を確認',
-      '상자를 구매해 감정소에 공급합니다.':'箱を購入して鑑定所へ供給します。','입고 방식별 가격':'入荷方式別価格','빈 적재대':'空の保管台',
-      '상자를 구매하면 아래에서부터 차곡차곡 쌓입니다.':'箱を購入すると下から順に積み上がります。','미감정 상자':'未鑑定の箱','입고 방식에 따라 가격과 별 등급 확률이 달라집니다.':'入荷方式によって価格と星等級の確率が変わります。',
-      '입고 방식':'入荷方式','일반 입고':'通常入荷','안전 입고':'安全入荷','고급 입고':'高級入荷','압류품 입고':'押収品入荷','미확인 경매':'未確認オークション','상자 1개 구매':'箱を1個購入','보유 상자':'保有箱',
-      '아래 목록의 첫 번째 상자부터 감정소로 전달됩니다.':'下の一覧の先頭にある箱から鑑定所へ送られます。','쌓인 상자는 장식이 아니라 실제 재고입니다.':'積まれた箱は飾りではなく実際の在庫です。','감정소에서 처리할 때마다 맨 먼저 들어온 상자부터 한 개씩 줄어듭니다.':'鑑定所で処理するたびに、最初に入庫した箱から1個ずつ減ります。','감정소로 이동':'鑑定所へ移動','보유 상자 비우기':'保有箱をすべて削除',
-      '모든 후보 물품을 분류별로 확인합니다.':'すべての候補品を分類別に確認します。','별 등급 1–5':'星等級 1–5','효과음 ON':'効果音 ON','분류':'分類',
-      '도감은 업무 시작과 함께 지급됩니다. 조사 결과와 후보 설명을 비교해 카테고리와 안전성을 추리하세요.':'図鑑は業務開始時に支給されます。調査結果と候補の説明を比較し、カテゴリーと安全性を推理してください。',
-      '나무 상자':'木箱','은 상자':'銀の箱','금 상자':'金の箱','다이아 상자':'ダイヤの箱','봉인된 상자':'封印された箱','생물 도감':'生物図鑑',
-      '상자를 먼저 구매하세요':'先に箱を購入してください','강조된 버튼을 직접 눌러주세요.':'強調されたボタンを押してください。','건너뛰기':'スキップ','다음':'次へ',
-      '상자 감정 규정서':'箱鑑定規定書','적재소에서 상자를 사고, 감정소에서 조사한 뒤 정답을 맞히는 순환 업무입니다.':'保管所で箱を購入し、鑑定所で調査して正解を当てる循環業務です。','확인필':'確認済み',
-      '무게 측정':'重量測定','내용물의 움직임과 무게 중심':'内容物の動きと重心','표면 온도':'表面温度','카테고리 성질':'カテゴリー特性','투과 검사':'透過検査','내용물 형태 힌트':'内容物の形状ヒント','표면 흔적':'表面痕跡','안전성 힌트':'安全性ヒント','반응 시약':'反応試薬','내용물 성질 힌트':'内容物の性質ヒント','봉인 검사':'封印検査',
-      '모든 검사는 정확하지만 표현은 간접적입니다. 한 상자당 4회만 조사할 수 있습니다.':'すべての検査は正確ですが、表現は間接的です。1箱につき4回まで調査できます。',
-      '순환 구조':'業務の流れ','1. 적재소에서 입고 방식을 고르고 상자 1개 구매':'1. 保管所で入荷方式を選び、箱を1個購入','2. 감정소에서 최대 4회 조사':'2. 鑑定所で最大4回調査','3. 카테고리와 안전성 선택':'3. カテゴリーと安全性を選択','4. 개봉하면 정답 항목에 따라 보상을 받습니다.':'4. 開封後、正解した項目に応じて報酬を獲得',
-      '별 등급별 최대 보상':'星等級別の最大報酬','카테고리와 안전성 보상은 최대 보상의 절반씩 계산됩니다.':'カテゴリーと安全性の報酬は最大報酬の半分ずつです。','둘 다 오답: 0 G':'両方不正解: 0 G','하나만 정답: 해당 항목 보상':'片方のみ正解: 該当項目の報酬','둘 다 정답: 등급별 최대 보상':'両方正解: 等級別最大報酬','확인':'確認','다음 날 시작':'翌日を開始',
-      '정확':'正確','내용물의 특징':'内容物の特徴','카테고리 측정':'カテゴリー判定','내용물 힌트':'内容物ヒント','위험도 측정':'安全性判定',
-      '내부에서 체온성 열원이 움직입니다.':'内部で体温に近い熱源が動いています。','무게 중심이 계속 이동합니다.':'重心が継続的に移動しています。','생물성 형체가 감지됩니다.':'生体らしい形状が検出されました。','생체 반응이 검출됩니다.':'生体反応が検出されました。',
-      '내부 온도는 거의 변하지 않습니다.':'内部温度にほとんど変化はありません。','작고 밀도 높은 물체가 들어 있습니다.':'小さく密度の高い内容物です。','정교하게 가공된 물체가 보입니다.':'精巧に加工された形状が確認できます。','금속, 종이 또는 보존 성분이 검출됩니다.':'金属、紙、または保存処理成分が検出されました。',
-      '일부 구역에서 비정상적인 열이 감지됩니다.':'一部で異常な熱が検出されました。','한쪽에 고밀도 물질이 몰려 있습니다.':'高密度の物質が片側に集中しています。','선, 용기, 압축된 물질이 함께 보입니다.':'配線、容器、圧縮物質を含む構造が見えます。','연소성 또는 반응성 물질이 검출됩니다.':'可燃性または反応性物質が検出されました。',
-      '특별한 열 변화가 없습니다.':'特別な温度変化はありません。','여러 물체가 불규칙하게 섞여 있습니다.':'重心と形状が不規則です。','용도가 서로 다른 물건들이 겹쳐 있습니다.':'用途を特定しにくい複雑な形状です。','먼지, 녹, 합성수지 성분이 섞여 나옵니다.':'ほこり、さび、合成樹脂系の成分が検出されました。','무게 중심이 불안정하고 형태가 일정하지 않습니다.':'重心が不安定で、形状も均一ではありません。','용도를 특정하기 어려운 복잡한 형태가 보입니다.':'用途を特定しにくい複雑な形状が確認できます。','먼지, 녹 또는 합성수지 계열 성분이 검출됩니다.':'ほこり、さび、または合成樹脂系の成分が検出されました。',
-      '깊은 긁힘과 충격 흔적이 여러 개 있습니다.':'深い傷と強い衝撃痕があります。','얕은 긁힘과 마찰 자국이 발견됩니다.':'浅い傷と摩擦痕が見つかりました。','큰 손상 없이 비교적 깨끗합니다.':'大きな損傷はなく比較的きれいです。',
-      '고위험 화물용 이중 봉인이 사용됐습니다.':'高危険貨物用の二重封印が使われています。','표준 봉인에 보조 잠금이 추가돼 있습니다.':'標準封印に補助ロックが追加されています。','일반 운송용 봉인이 정상적으로 유지됩니다.':'一般輸送用の封印が正常に保たれています。',
-      '완벽한 감정':'完全鑑定','부분 감정 성공':'一部鑑定成功','감정 실패':'鑑定失敗','실제 물품':'実際の品物','설명':'説明','실제 카테고리':'実際のカテゴリー','실제 위험도':'実際の安全性','카테고리 추리':'カテゴリー判定','위험도 추리':'安全性判定','총 보상':'合計報酬','정답':'正解','오답':'不正解',
-      '보유한 상자가 없습니다.':'保有している箱はありません。','보관 한도 15개':'保管上限15個','보관 한도에 도달했습니다. 감정소에서 상자를 처리하세요.':'保管上限に達しました。鑑定所で箱を処理してください。','한 더미에 5개씩, 최대 15개까지 보관할 수 있습니다.':'1列5個、最大15個まで保管できます。','적재 중':'個を保管中','미감정 상태':'未鑑定状態',
-      '보유 상자를 모두 비울까요?':'保有している箱をすべて削除しますか？','돈과 보유 상자를 처음 상태로 되돌릴까요?':'資金と保有箱を初期状態に戻しますか？',
-      '첫 상자를 준비하세요':'最初の箱を用意してください','적재소는 감정할 상자를 사서 보관하는 장소입니다. 상자 가격은 200 G입니다.':'保管所は鑑定する箱を購入して保管する場所です。箱の価格は200 Gです。','강조된 상자 1개 구매 버튼을 직접 눌러주세요.':'強調されている「箱を1個購入」ボタンを押してください。','구매 버튼을 직접 눌러주세요':'購入ボタンを押してください',
-      '작업장 사이를 이동하세요':'作業場所を移動してください','상자를 준비했으니 이제 감정소로 옮겨야 합니다. 이후에도 하단 이동 버튼으로 적재소와 감정소를 오갈 수 있습니다.':'箱を用意したので、鑑定所へ移動します。以後も画面下部の移動ボタンで保管所と鑑定所を行き来できます。','강조된 감정소 이동 버튼을 직접 눌러주세요.':'強調されている「鑑定所へ移動」ボタンを押してください。','감정소 이동을 눌러주세요':'鑑定所への移動を押してください',
-      '첫 번째 단서를 직접 조사하세요':'最初の手掛かりを調査してください','무게 측정은 내용물의 움직임과 무게 중심을 알려줍니다.':'重量測定では内容物の動きと重心を確認できます。','강조된 무게 측정 버튼을 눌러주세요.':'強調されている重量測定ボタンを押してください。','조사 기록을 확인하세요':'調査記録を確認してください','방금 얻은 단서가 조사 기록에 추가됐습니다. 모든 결과는 정확하지만 표현은 간접적입니다.':'取得した手掛かりが調査記録に追加されました。結果はすべて正確ですが、表現は間接的です。','기록을 읽은 뒤 아래 확인 버튼을 눌러주세요.':'記録を読んだ後、下の確認ボタンを押してください。','확인했어요':'確認しました',
-      '안전성 단서를 하나 더 찾으세요':'安全性の手掛かりをもう一つ調べてください','위험도 단서를 하나 더 찾으세요':'安全性の手掛かりをもう一つ調べてください','표면 흔적은 상자 안쪽의 긁힘과 충격 흔적으로 위험도를 알려줍니다.':'表面痕跡では箱内部の傷や衝撃痕から安全性を推測できます。','강조된 표면 흔적 버튼을 눌러주세요.':'強調されている表面痕跡ボタンを押してください。','판정을 직접 입력하세요':'判定を入力してください','카테고리와 위험도를 선택해야 개봉 결과와 비교할 수 있습니다.':'カテゴリーと安全性を選択すると、開封結果と比較できます。','카테고리와 위험도를 모두 선택해주세요.':'カテゴリーと安全性を両方選択してください。',
-      '상자를 개봉해 답을 확인하세요':'箱を開封して答えを確認してください','개봉하면 상자 한 개가 소비되고 카테고리와 위험도 정답마다 150 G를 받습니다.':'開封すると箱を1個消費し、カテゴリーと安全性の正解項目ごとに報酬を獲得します。','강조된 상자 개봉 버튼을 눌러주세요.':'強調されている箱開封ボタンを押してください。','정산표를 읽어보세요':'精算表を確認してください','카테고리 정답 150 G와 위험도 정답 150 G가 각각 계산됩니다. 둘 다 맞히면 총 300 G입니다.':'カテゴリーと安全性の報酬がそれぞれ計算されます。星1の箱では両方正解で合計300 Gです。','정산 내역을 확인하면 첫 업무가 끝납니다.':'精算内容を確認すると最初の業務が完了します。','튜토리얼 완료':'チュートリアル完了','직접 조작해주세요':'画面を操作してください',
-      '업무 인수서에 서명하세요':'業務引継書に署名してください','쌓여 있는 서류 중 마지막 인수 확인서입니다. 빈칸에 이름을 입력한 뒤 업무 인수 버튼을 눌러주세요.':'積まれた書類の最後にある引継確認書です。署名欄に名前を入力してから業務引継ボタンを押してください。','서명란에 이름을 입력하고 아래 버튼을 눌러주세요.':'署名欄に名前を入力し、下のボタンを押してください。','서명 후 버튼을 눌러주세요':'署名後にボタンを押してください',
-      '효과음 OFF':'効果音 OFF','효과음 ON':'効果音 ON','구매 완료':'購入完了','잔액이 부족합니다.':'残高が不足しています。','카테고리와 안전성을 모두 선택하세요.':'カテゴリーと安全性を両方選択してください。'
-    };
-
-    const itemJa={
-      '슈뢰딩거의 고양이(적응)':['シュレーディンガーの猫（適応）','フルベ・ユラユラ……'],
-      '코가 긴 길고양이':['鼻の長い野良猫','たらいが物騒で仕方ありません'],
-      '담배피는 고양이':['煙草を吸う猫','呼吸器疾患を引き起こします'],
-      '드래곤':['ドラゴン','格好いいです'],'짱룡':['チャンリュウ','通販サイトから届きました'],'북극곰':['ホッキョクグマ','北極が溶けるその日まで'],'마즈':['マーズ','マレーグマです'],'보노보':['ボノボ','逆から読んでもボノボ'],'성인 남성':['成人男性','なぜ入っているのですか'],'개발자':['開発者','本当に売るつもりなのか……'],'아트팀':['アートチーム','助けてください'],'자라나는 금덩이':['育つ金塊','すくすく育ちます'],'슬라임':['スライム','ね……ば……ね……ば……'],'세상에서 가장 귀여운 고양이':['世界で一番かわいい猫','かわいいです'],'슈뢰딩거의 고양이(생존)':['シュレーディンガーの猫（生存）','しかし生きていました'],
-      '수상한 책':['怪しい本','怪しいです'],'상속인이 얽힌 집문서':['相続争いの権利書','法廷の沼へ'],'하얀색 가루':['白い粉','気分が良くなります'],'콘솔 게임기':['家庭用ゲーム機','砂漠から掘り出されました'],'낡은 왕관':['古びた王冠','王はいなくても王冠は残りました'],'순금 명함':['純金の名刺','持ち主は不明です'],'검은 진주':['黒真珠','光を飲み込む色です'],'고장 난 회중시계':['壊れた懐中時計','時間よりも価値があります'],'봉인된 우표첩':['封印された切手帳','手紙より長く生き残りました'],'오래된 주식 증서':['古い株券','紙一枚に希望が貼り付いています'],'출처불명 금덩어리':['出所不明の金塊','かつて別の金塊の一部でした'],'금화':['金貨','金で作られた貨幣です'],'가짜처럼 보이는 진짜 다이아몬드':['偽物に見える本物のダイヤ','研究室で作られました'],'비싼 술':['高級酒','いつ飲んでも悪くありません'],'두바이쫀득쿠키':['ドバイもちもちクッキー','もちもちでさくさくです'],
-      '알라의 요술봉':['アラーの魔法の杖','赤い砂、黒い金'],'뚱뚱한 청년':['太った青年','影が先に到着します'],'작은 소년':['小さな少年','小さくても決して軽くありません'],'빨간 풍선 99개':['99個の赤い風船','君を思いながら飛ばします'],'거꾸로 가는 시계':['逆回りの時計','時計じゃないよ～'],'빨간 버튼':['赤いボタン','ボードゲームカフェです'],'압력식 광산용 뇌관':['圧力式鉱山用雷管','踏まなくても注意してください'],'다이너마이트':['ダイナマイト','一、二、三、発破！'],'화약 꾸러미':['火薬包み','火気を近づけないでください'],'LPG가스통':['LPGガスボンベ','涼しい場所で保管してください'],'불붙은 폭죽':['火のついた花火','もう遅いかもしれません'],'보조 배터리':['モバイルバッテリー','時々爆発します'],'터질 듯한 풍선':['破裂寸前の風船','針一本で終わりです'],'멘토스와 콜라':['メントスとコーラ','組み合わせが有名すぎます'],'흔들어진 콜라':['振られたコーラ','べたべたして甘いです'],
-      '핵폐기물':['核廃棄物','なぜここにあるのですか？'],'끊어진 이어폰':['断線したイヤホン','片耳だけ聞こえた時代も終わりました'],'빈 통조림':['空き缶','中には思い出すらありません'],'젖은 양말':['濡れた靴下','原因は知りたくありません'],'깨진 우산':['壊れた傘','雨ではなく風に負けました'],'낡은 리모컨':['古いリモコン','どの機器のものか分かりません'],'단추 한 통':['ボタンの瓶','相方を失ったものたちです'],'구겨진 영수증':['しわくちゃのレシート','覚えていない消費の記録'],'바퀴 하나 없는 의자':['車輪が一つない椅子','座った瞬間に覚悟します'],'빈 액자':['空の額縁','一番大切なものがありません'],'고장 난 토스터':['壊れたトースター','パンより先に煙が出ます'],'정체불명의 케이블':['正体不明のケーブル','捨てると翌日に必要になります'],'OMR 카드':['OMRカード','それぞれの物語が詰まった数十万の夢'],'연필깎이':['鉛筆削り','先を鋭くします'],'일회용 귀마개':['使い捨て耳栓','いつでもどこでも快適に']
-    };
-
-    function localizedItem(item){
-      if(currentLanguage!=='ja')return{name:item.name,description:item.description};
-      const translated=itemJa[item.name];
-      return translated?{name:translated[0],description:translated[1]}:{name:item.name,description:item.description};
-    }
-    function localizedCategory(key){return currentLanguage==='ja'?({mimic:'生物',treasure:'貴重品',explosive:'爆発物',junk:'雑貨'}[key]||key):(itemCatalog[key]?.label||key)}
-    function localizedRisk(key){return currentLanguage==='ja'?({safe:'安全',warning:'注意',danger:'危険'}[key]||key):riskLabel[key]}
-    function localizedChest(grade){return currentLanguage==='ja'?['木箱','銀の箱','金の箱','ダイヤの箱','封印された箱'][grade]:chestNames[grade]}
-    function translateString(text){
-      if(currentLanguage!=='ja'||!text)return text;
-      const trimmed=text.trim();
-      if(jaText[trimmed])return text.replace(trimmed,jaText[trimmed]);
-      let out=text;
-      Object.entries(jaText).sort((a,b)=>b[0].length-a[0].length).forEach(([ko,ja])=>{if(out.includes(ko))out=out.split(ko).join(ja)});
-      const patterns=[
-        [/보유 상자 (\d+) \/ (\d+)개/g,'保有箱 $1 / $2個'],[/보유 상자 (\d+)개/g,'保有箱 $1個'],[/^(\d+)개$/,'$1個'],[/^(\d+)개 적재 중$/,'$1個を保管中'],
-        [/발견 (\d+) \/ (\d+)/g,'発見 $1 / $2'],[/(\d+) \/ (\d+) 발견/g,'$1 / $2 発見'],[/연속 (\d+)/g,'連続 $1'],
-        [/상자를 열어 (.+)을\(를\) 확인했습니다\./g,'箱を開けて「$1」を確認しました。'],[/^(\d+)\. 미감정 상자$/,'$1. 未鑑定の箱'],
-        [/정답 \+(\d+) G/g,'正解 +$1 G'],[/오답 \+0 G/g,'不正解 +0 G'],[/^(\d+)성 상자$/,'星$1の箱'],[/· 미감정 상태/g,'· 未鑑定状態']
-      ];
-      patterns.forEach(([r,v])=>out=out.replace(r,v));
-      return out;
-    }
-    function translateNode(node){
-      if(currentLanguage!=='ja')return;
-      if(node.nodeType===Node.TEXT_NODE){const next=translateString(node.nodeValue);if(next!==node.nodeValue)node.nodeValue=next;return}
-      if(node.nodeType!==Node.ELEMENT_NODE)return;
-      node.childNodes.forEach(translateNode);
-      ['placeholder','title','aria-label'].forEach(attr=>{if(node.hasAttribute?.(attr))node.setAttribute(attr,translateString(node.getAttribute(attr)))})
-    }
-    function applyLanguage(){
-      document.documentElement.lang=currentLanguage;
-      document.title=currentLanguage==='ja'?'箱鑑定所':'상자 감정소';
-      if(currentLanguage==='ja')translateNode(document.body);
-      startLanguageObserver();updateSoundButtons();
-      createTools();updateGlobalUI();updateStorageUI(false);updateInspectionUI();renderCollection?.();
-    }
-    function chooseLanguage(lang){
-      currentLanguage=lang==='ja'?'ja':'ko';
-      try{localStorage.setItem(LANGUAGE_KEY,currentLanguage)}catch(error){}
-      $('#languageSelect')?.classList.add('hidden');
-      applyLanguage();
-    }
 
 
-    // 일본어 선택 후 동적으로 만들어지는 문구도 즉시 번역합니다.
-    let languageObserver=null;
-    function startLanguageObserver(){
-      languageObserver?.disconnect();
-      if(currentLanguage!=='ja')return;
-      languageObserver=new MutationObserver(records=>{
-        languageObserver.disconnect();
-        records.forEach(record=>{
-          record.addedNodes.forEach(node=>translateNode(node));
-          if(record.type==='characterData')translateNode(record.target);
-        });
-        languageObserver.observe(document.body,{subtree:true,childList:true,characterData:true});
-      });
-      languageObserver.observe(document.body,{subtree:true,childList:true,characterData:true});
-    }
-
-    // 외부 음원 없이 동작하는 짧은 UI 효과음
-    const SOUND_KEY='box_appraisal_sound';
-    let soundEnabled=(()=>{try{return localStorage.getItem(SOUND_KEY)!=='off'}catch(error){return true}})();
-    let audioContext=null;
-    function getAudioContext(){
-      if(!soundEnabled)return null;
-      const Context=window.AudioContext||window.webkitAudioContext;
-      if(!Context)return null;
-      audioContext ||= new Context();
-      if(audioContext.state==='suspended')audioContext.resume().catch(()=>{});
-      return audioContext;
-    }
-    function tone(frequency=440,duration=.06,type='sine',volume=.035,delay=0){
-      const ctx=getAudioContext();if(!ctx)return;
-      const osc=ctx.createOscillator(),gain=ctx.createGain(),now=ctx.currentTime+delay;
-      osc.type=type;osc.frequency.setValueAtTime(frequency,now);
-      gain.gain.setValueAtTime(.0001,now);gain.gain.exponentialRampToValueAtTime(Math.max(.0002,volume),now+.008);gain.gain.exponentialRampToValueAtTime(.0001,now+duration);
-      osc.connect(gain);gain.connect(ctx.destination);osc.start(now);osc.stop(now+duration+.02);
-    }
-    function playSound(kind='click'){
-      if(!soundEnabled)return;
-      if(kind==='buy'){tone(240,.07,'square',.025);tone(360,.09,'sine',.03,.055)}
-      else if(kind==='inspect'){tone(520,.05,'triangle',.024);tone(680,.06,'triangle',.02,.045)}
-      else if(kind==='open'){tone(150,.09,'sawtooth',.025);tone(95,.13,'sine',.035,.07)}
-      else if(kind==='success'){tone(440,.08,'sine',.035);tone(660,.11,'sine',.04,.08)}
-      else if(kind==='fail'){tone(220,.1,'square',.025);tone(165,.14,'sine',.03,.08)}
-      else tone(410,.045,'sine',.018);
-    }
-    function updateSoundButtons(){
-      document.querySelectorAll('.sound-toggle').forEach(button=>button.textContent=currentLanguage==='ja'?(soundEnabled?'効果音 ON':'効果音 OFF'):(soundEnabled?'효과음 ON':'효과음 OFF'));
-    }
-    function toggleSound(){soundEnabled=!soundEnabled;try{localStorage.setItem(SOUND_KEY,soundEnabled?'on':'off')}catch(error){};updateSoundButtons();if(soundEnabled)playSound('success')}
-
-
-
+    const defaultState=()=>({money:1000,boxes:[],tutorialDone:false,collection:{},day:1,processedToday:0,streak:0,bestStreak:0,dayCorrect:0,dayReward:0,sound:true});
     let state=loadState();
-    let accidents=0;
     let current=null,used=0,results=[],resolved=false,insMode='idle',insTime=0;
 
-    function loadState(){
-      try{
-        const raw=JSON.parse(localStorage.getItem(STORE_KEY));
-        if(raw&&Number.isFinite(raw.money)&&Array.isArray(raw.boxes))return{...raw,tutorialDone:Boolean(raw.tutorialDone),collection:raw.collection&&typeof raw.collection==='object'?raw.collection:{}};
-      }catch(error){console.warn(error)}
-      return{money:1000,boxes:[],tutorialDone:false,collection:{}};
+    function normalizeBox(box){
+      if(!box||typeof box!=='object')return null;
+      const content=itemCatalog[box.content]?box.content:'mimic';
+      const grade=Math.max(0,Math.min(4,Number(box.grade)||0));
+      const itemIndex=Math.max(0,Math.min(14,Number(box.itemIndex)||0));
+      return{...box,id:box.id||`BX-${Date.now()}-${rint(100,999)}`,content,grade,itemIndex,risk:itemCatalog[content].items[itemIndex].risk};
     }
-    function saveState(){localStorage.setItem(STORE_KEY,JSON.stringify(state));updateGlobalUI()}
-    const money=v=>`${Math.round(v).toLocaleString(currentLanguage==='ja'?'ja-JP':'ko-KR')} G`;
+    function loadState(){
+      const base=defaultState();
+      try{
+        let raw=localStorage.getItem(STORE_KEY);
+        if(!raw){for(const key of LEGACY_KEYS){raw=localStorage.getItem(key);if(raw)break}}
+        const parsed=raw?JSON.parse(raw):null;
+        if(!parsed||typeof parsed!=='object')return base;
+        return{...base,...parsed,money:Number.isFinite(parsed.money)?parsed.money:base.money,boxes:Array.isArray(parsed.boxes)?parsed.boxes.map(normalizeBox).filter(Boolean).slice(0,MAX_BOXES):[],collection:parsed.collection&&typeof parsed.collection==='object'?parsed.collection:{}};
+      }catch(error){console.warn('저장 데이터 불러오기 실패',error);return base}
+    }
+    function saveState(){
+      try{localStorage.setItem(STORE_KEY,JSON.stringify(state));LEGACY_KEYS.forEach(key=>localStorage.removeItem(key))}catch(error){console.warn('저장 실패',error)}
+      updateGlobalUI();
+    }
+    const money=v=>`${Math.round(v).toLocaleString('ko-KR')} G`;
     const rand=(a,b)=>Math.random()*(b-a)+a;
     const rint=(a,b)=>Math.floor(rand(a,b+1));
     const pick=a=>a[Math.floor(Math.random()*a.length)];
     function weighted(entries){let total=entries.reduce((s,e)=>s+e.weight,0),roll=Math.random()*total;for(const e of entries){roll-=e.weight;if(roll<=0)return e.value}return entries.at(-1).value}
 
-    function createBoxData(){
-      const content=pick(Object.keys(itemCatalog));
+    function createBoxData(type='standard'){
+      const purchase=PURCHASES[type]||PURCHASES.standard;
+      let content;
+      if(purchase.category==='seized')content=weighted([{value:'explosive',weight:48},{value:'mimic',weight:22},{value:'junk',weight:20},{value:'treasure',weight:10}]);
+      else content=pick(Object.keys(itemCatalog));
       const items=itemCatalog[content].items;
-      const itemIndex=rint(0,items.length-1);
-      const grade=weighted([{value:0,weight:42},{value:1,weight:28},{value:2,weight:17},{value:3,weight:9},{value:4,weight:4}]);
+      let candidates=items.map((_,index)=>index);
+      if(purchase.category==='safe')candidates=candidates.filter(index=>items[index].risk!=='danger');
+      const itemIndex=pick(candidates);
+      const grade=weighted(purchase.weights.map((weight,value)=>({value,weight})));
       return{id:`BX-${Date.now()}-${rint(100,999)}`,grade,itemIndex,content,risk:items[itemIndex].risk,stability:rint(20,95)};
     }
 
@@ -323,34 +181,53 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.181.1/build/three.m
       {id:'weight',icon:'㎏',name:'무게 측정',info:'내용물의 특징'},
       {id:'temperature',icon:'℃',name:'표면 온도',info:'카테고리 측정'},
       {id:'scan',icon:'▧',name:'투과 검사',info:'내용물 힌트'},
-      {id:'surface',icon:'⌕',name:'표면 흔적',info:'위험도 측정'},
+      {id:'surface',icon:'⌕',name:'표면 흔적',info:'안전성 측정'},
       {id:'reagent',icon:'●',name:'반응 시약',info:'내용물 힌트'},
-      {id:'seal',icon:'封',name:'봉인 검사',info:'위험도 측정'}
+      {id:'seal',icon:'封',name:'봉인 검사',info:'안전성 측정'}
     ];
     function truthful(id){
       const category=itemCatalog[current.content]||itemCatalog.mimic;
       const item=category.items[current.itemIndex]||category.items[0];
-      const localized=localizedItem(item);
       const categoryClues={
-        mimic:{temperature:['내부에서 체온성 열원이 움직입니다.'],weight:['무게 중심이 계속 이동합니다.'],scan:['생물성 형체가 감지됩니다.'],reagent:['생체 반응이 검출됩니다.']},
-        treasure:{temperature:['내부 온도는 거의 변하지 않습니다.'],weight:['작고 밀도 높은 물체가 들어 있습니다.'],scan:['정교하게 가공된 물체가 보입니다.'],reagent:['금속, 종이 또는 보존 성분이 검출됩니다.']},
-        explosive:{temperature:['일부 구역에서 비정상적인 열이 감지됩니다.'],weight:['한쪽에 고밀도 물질이 몰려 있습니다.'],scan:['선, 용기, 압축된 물질이 함께 보입니다.'],reagent:['연소성 또는 반응성 물질이 검출됩니다.']},
-        junk:{temperature:['특별한 열 변화가 없습니다.'],weight:['무게 중심이 불안정하고 형태가 일정하지 않습니다.'],scan:['용도를 특정하기 어려운 복잡한 형태가 보입니다.'],reagent:['먼지, 녹 또는 합성수지 계열 성분이 검출됩니다.']}
+        mimic:{
+          temperature:['내용물에서 체온과 비슷한 열이 감지됩니다.'],
+          weight:['내용물의 무게 중심이 스스로 조금씩 이동합니다.'],
+          scan:['생물로 보이는 형체가 감지됩니다.'],
+          reagent:['내용물 표면에서 생체 반응이 검출됩니다.']
+        },
+        treasure:{
+          temperature:['내용물의 온도는 주변과 거의 같습니다.'],
+          weight:['크기에 비해 밀도가 높은 내용물입니다.'],
+          scan:['정교하게 가공된 형태가 확인됩니다.'],
+          reagent:['금속성 또는 보존 처리에 사용되는 성분이 검출됩니다.']
+        },
+        explosive:{
+          temperature:['내용물의 한 지점에서 비정상적인 열이 감지됩니다.'],
+          weight:['내용물 내부의 한쪽에 고밀도 부분이 있습니다.'],
+          scan:['내부에서 배선이나 압축된 구조가 확인됩니다.'],
+          reagent:['내용물에서 연소성 또는 반응성 성분이 검출됩니다.']
+        },
+        junk:{
+          temperature:['내용물에서 특별한 열 변화가 감지되지 않습니다.'],
+          weight:['무게 중심이 한쪽으로 치우쳐 있습니다.'],
+          scan:['용도를 바로 알아보기 어려운 형태가 확인됩니다.'],
+          reagent:['먼지, 녹 또는 합성수지 계열의 성분이 검출됩니다.']
+        }
       };
       if(id==='temperature')return pick(categoryClues[current.content].temperature);
       if(id==='weight')return pick(categoryClues[current.content].weight);
       if(id==='scan')return pick(categoryClues[current.content].scan);
       if(id==='reagent')return pick(categoryClues[current.content].reagent);
-      if(id==='surface')return pick({danger:['깊은 긁힘과 충격 흔적이 여러 개 있습니다.'],warning:['얕은 긁힘과 마찰 자국이 발견됩니다.'],safe:['큰 손상 없이 비교적 깨끗합니다.']}[current.risk]);
+      if(id==='surface')return pick({danger:['상자 안쪽에 깊은 긁힘과 강한 충격 흔적이 있습니다.'],warning:['상자 안쪽에 얕은 긁힘과 마찰 자국이 있습니다.'],safe:['상자 안쪽은 큰 손상 없이 비교적 깨끗합니다.']}[current.risk]);
       if(id==='seal')return pick({danger:['고위험 화물용 이중 봉인이 사용됐습니다.'],warning:['표준 봉인에 보조 잠금이 추가돼 있습니다.'],safe:['일반 운송용 봉인이 정상적으로 유지됩니다.']}[current.risk]);
-      return currentLanguage==='ja'?`${localized.name}に関連する間接反応が検出されました。`:`${item.name}과 관련된 간접 반응이 감지됩니다.`;
+      return `${item.name}과 관련된 간접 반응이 감지됩니다.`;
     }
 
     function createTools(){
       const list=$('#toolList');list.innerHTML='';
-      tools.forEach(t=>{const b=document.createElement('button');b.className='tool-button';b.dataset.tool=t.id;b.innerHTML=`<span class="tool-icon">${t.icon}</span><span><span class="tool-name">${translateString(t.name)}</span><span class="tool-info">${translateString(t.info)}</span></span><span class="tool-accuracy">${translateString('정확')}</span>`;b.onclick=()=>inspect(t);list.appendChild(b)});
+      tools.forEach(t=>{const b=document.createElement('button');b.className='tool-button';b.dataset.tool=t.id;b.innerHTML=`<span class="tool-icon">${t.icon}</span><span><span class="tool-name">${t.name}</span><span class="tool-info">${t.info}</span></span><span class="tool-accuracy">정확</span>`;b.onclick=()=>inspect(t);list.appendChild(b)});
     }
-    function inspect(tool){if(!current||resolved||used>=4)return;playSound('inspect');used++;results.push({id:tool.id,name:translateString(tool.name),text:translateString(truthful(tool.id))});insMode=tool.id==='weight'?'lift':'inspect';insTime=0;updateInspectionUI();advanceInspectionGuide('tool',tool.id)}
+    function inspect(tool){if(!current||resolved||used>=4)return;used++;results.push({id:tool.id,name:tool.name,text:truthful(tool.id)});insMode=tool.id==='weight'?'lift':'inspect';insTime=0;updateInspectionUI();advanceInspectionGuide('tool',tool.id)}
 
     function beginCurrentBox(){
       current=state.boxes.length?state.boxes[0]:null;if(current&&!itemCatalog[current.content])current.content='mimic';used=0;results=[];resolved=false;$('#contentGuess').value='unknown';$('#riskGuess').value='unknown';$('#resultLayer').classList.remove('show');
@@ -359,44 +236,38 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.181.1/build/three.m
     }
     function updateInspectionUI(){
       $('#inspectionMoney').textContent=money(state.money);$('#inspectionInventoryText').textContent=`보유 상자 ${state.boxes.length} / ${MAX_BOXES}개`;$('#inspectionBoxCount').textContent=`${state.boxes.length} / ${MAX_BOXES}`;$('#inventoryProgress').style.width=`${state.boxes.length/MAX_BOXES*100}%`;
-      if(current){$('#caseNumber').textContent='STORED BOX';$('#caseName').textContent=localizedChest(current.grade);$('#caseSub').textContent=`${current.id.split('-').slice(0,2).join('-')} · ${currentLanguage==='ja'?'未鑑定状態':'미감정 상태'}`}else{$('#caseName').textContent='상자 없음';$('#caseSub').textContent='적재소에서 상자를 구매하세요'}
+      if(current){$('#caseNumber').textContent='STORED BOX';$('#caseName').textContent=chestNames[current.grade];$('#caseSub').textContent=`${current.id.split('-').slice(0,2).join('-')} · 미감정 상태`}else{$('#caseName').textContent='상자 없음';$('#caseSub').textContent='적재소에서 상자를 구매하세요'}
+      const total=current?GRADE_REWARDS[current.grade]:GRADE_REWARDS[0];const half=total/2;$('#currentRewardText').innerHTML=current?`<strong>${current.grade+1}성 상자</strong> · 카테고리 정답 +${money(half)} · 안전성 정답 +${money(half)}<br>둘 다 맞히면 총 ${money(total)}를 받습니다.`:'상자를 준비하면 등급별 판정 보상이 표시됩니다.';
       $$('#inspectionCount .inspection-dot').forEach((d,i)=>d.className=`inspection-dot ${i<used?'used':'available'}`);
       $('#clueList').innerHTML=results.length?results.map((r,i)=>`<article class="clue-item"><div class="clue-head"><span class="clue-name">${i+1}. ${r.name}</span><span class="clue-confidence">정확</span></div><p class="clue-result">${r.text}</p></article>`).join(''):'<div class="clue-empty">아직 기록된 조사 결과가 없습니다.</div>';
       $$('#toolList .tool-button').forEach(b=>b.disabled=!current||resolved||used>=4||results.some(r=>r.id===b.dataset.tool));
       $$('#inspectionGame .action-button').forEach(b=>b.disabled=!current||resolved);$('#contentGuess').disabled=$('#riskGuess').disabled=!current||resolved;
     }
+    function collectionKey(box){return `${box.content}:${box.itemIndex}`}
+    function revealResult(category,item,categoryCorrect,riskCorrect,reward){
+      $('#resultKicker').textContent='ANSWER CHECK';
+      $('#resultTitle').textContent=categoryCorrect&&riskCorrect?'완벽한 감정':categoryCorrect||riskCorrect?'부분 감정 성공':'감정 실패';
+      $('#resultDescription').textContent=`상자를 열어 ${item.name}을(를) 확인했습니다.`;
+      $('#resultMoney').textContent=`+${money(reward)}`;$('#resultMoney').style.color=reward>0?'var(--green)':'var(--sub)';
+      const half=GRADE_REWARDS[current.grade]/2;
+      $('#resultDetails').innerHTML=`<div class="result-detail-row"><span>실제 물품</span><strong>${item.name}</strong></div><div class="result-detail-row"><span>설명</span><strong>${item.description}</strong></div><div class="result-detail-row"><span>실제 카테고리</span><strong>${category.label}</strong></div><div class="result-detail-row"><span>실제 안전성</span><strong>${riskLabel[current.risk]}</strong></div><div class="result-detail-row"><span>카테고리 판정</span><strong>${categoryCorrect?`정답 +${money(half)}`:'오답 +0 G'}</strong></div><div class="result-detail-row"><span>안전성 판정</span><strong>${riskCorrect?`정답 +${money(half)}`:'오답 +0 G'}</strong></div><div class="result-detail-row"><span>총 보상</span><strong>+${money(reward)}</strong></div>`;
+      $('#resultNext').textContent=state.processedToday>=8?'일일 정산 보기':state.boxes.length?'다음 보유 상자':'적재소로 이동';
+      $('#resultLayer').classList.add('show');
+    }
     function resolveAction(action){
       if(!current||resolved||action!=="open")return;
-      playSound('open');
+      if($('#contentGuess').value==='unknown'||$('#riskGuess').value==='unknown'){alert('카테고리와 안전성을 모두 선택해주세요.');return}
       resolved=true;
-      const category=itemCatalog[current.content]||itemCatalog.mimic;
-      const item=category.items[current.itemIndex]||category.items[0];
-      const localized=localizedItem(item);
-      const categoryCorrect=$('#contentGuess').value===current.content;
-      const riskCorrect=$('#riskGuess').value===current.risk;
-      const categoryReward=categoryCorrect?CATEGORY_REWARD:0;
-      const riskReward=riskCorrect?RISK_REWARD:0;
-      const reward=categoryReward+riskReward;
-
-      state.money+=reward;
-      state.collection=state.collection||{};
-      const collectionKey=`${current.content}:${current.itemIndex}`;
-      const previous=state.collection[collectionKey]||{count:0,maxGrade:-1};
-      state.collection[collectionKey]={count:previous.count+1,maxGrade:Math.max(previous.maxGrade,current.grade)};
-      state.boxes.shift();
-      saveState();
-
-      $('#resultKicker').textContent='ANSWER CHECK';
-      $('#resultTitle').textContent=categoryCorrect&&riskCorrect?'완벽한 감정':categoryCorrect||riskCorrect?'부분 감정 성공':'감정 실패';playSound(categoryCorrect||riskCorrect?'success':'fail');
-      $('#resultDescription').textContent=currentLanguage==='ja'?`箱を開けて「${localized.name}」を確認しました。`:`상자를 열어 ${item.name}을(를) 확인했습니다.`;
-      $('#resultMoney').textContent=`+${money(reward)}`;
-      $('#resultMoney').style.color=reward>0?'var(--green)':'var(--sub)';
-      $('#resultDetails').innerHTML=currentLanguage==='ja'?`<div class="result-detail-row"><span>実際の品物</span><strong>${localized.name}</strong></div><div class="result-detail-row"><span>説明</span><strong>${localized.description}</strong></div><div class="result-detail-row"><span>実際のカテゴリー</span><strong>${localizedCategory(current.content)}</strong></div><div class="result-detail-row"><span>実際の安全性</span><strong>${localizedRisk(current.risk)}</strong></div><div class="result-detail-row"><span>カテゴリー判定</span><strong>${categoryCorrect?`正解 +${CATEGORY_REWARD} G`:'不正解 +0 G'}</strong></div><div class="result-detail-row"><span>安全性判定</span><strong>${riskCorrect?`正解 +${RISK_REWARD} G`:'不正解 +0 G'}</strong></div><div class="result-detail-row"><span>合計報酬</span><strong>+${reward} G</strong></div>`:`<div class="result-detail-row"><span>실제 물품</span><strong>${item.name}</strong></div><div class="result-detail-row"><span>설명</span><strong>${item.description}</strong></div><div class="result-detail-row"><span>실제 카테고리</span><strong>${category.label}</strong></div><div class="result-detail-row"><span>실제 위험도</span><strong>${riskLabel[current.risk]}</strong></div><div class="result-detail-row"><span>카테고리 추리</span><strong>${categoryCorrect?`정답 +${CATEGORY_REWARD} G`:'오답 +0 G'}</strong></div><div class="result-detail-row"><span>위험도 추리</span><strong>${riskCorrect?`정답 +${RISK_REWARD} G`:'오답 +0 G'}</strong></div><div class="result-detail-row"><span>총 보상</span><strong>+${reward} G</strong></div>`;
-      $('#resultNext').textContent=state.boxes.length?'다음 보유 상자':'적재소로 이동';
-      $('#resultLayer').classList.add('show');
-      advanceInspectionGuide('open');
-      updateInspectionUI();
-      updateStorageUI();
+      const category=itemCatalog[current.content],item=category.items[current.itemIndex];
+      const categoryCorrect=$('#contentGuess').value===current.content,riskCorrect=$('#riskGuess').value===current.risk;
+      const half=GRADE_REWARDS[current.grade]/2,reward=(categoryCorrect?half:0)+(riskCorrect?half:0);
+      state.money+=reward;state.processedToday+=1;state.dayReward+=reward;
+      if(categoryCorrect&&riskCorrect){state.streak+=1;state.bestStreak=Math.max(state.bestStreak,state.streak);state.dayCorrect+=1}else state.streak=0;
+      const key=collectionKey(current),previous=state.collection[key]||{count:0,bestGrade:-1};state.collection[key]={count:previous.count+1,bestGrade:Math.max(previous.bestGrade,current.grade)};
+      state.boxes.shift();saveState();
+      $('#openingLayer').classList.add('show');
+      setTimeout(()=>{$('#openingLayer').classList.remove('show');revealResult(category,item,categoryCorrect,riskCorrect,reward)},550);
+      advanceInspectionGuide('open');updateInspectionUI();updateStorageUI();renderCollection();
     }
 
     let storageDropAnimation=null;
@@ -466,12 +337,12 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.181.1/build/three.m
       if(onboardingActive&&onboardingPurchased){onboardingPurchased=false;setTimeout(startMoveGuide,360)}
     }
 
-    function buyBox(){playSound('buy');
-      if(storageAnimating||state.money<BOX_PRICE||state.boxes.length>=MAX_BOXES)return;
+    function buyBox(){
+      const type=$('#purchaseType').value,purchase=PURCHASES[type]||PURCHASES.standard;if(storageAnimating||state.money<purchase.price||state.boxes.length>=MAX_BOXES)return;
       const newIndex=state.boxes.length;
       storageAnimating=true;
-      state.money-=BOX_PRICE;
-      state.boxes.push(createBoxData());
+      state.money-=purchase.price;
+      state.boxes.push(createBoxData(type));
       if(onboardingActive){onboardingPurchased=true;guideOverlay.classList.add('hidden')};
       saveState();
       updateStorageUI(false);
@@ -479,66 +350,51 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.181.1/build/three.m
     }
     function updateStorageUI(rebuild=true){
       $('#storageMoney').textContent=money(state.money);$('#storageCount').textContent=state.boxes.length;$('#storageProgressText').textContent=`보유 상자 ${state.boxes.length} / ${MAX_BOXES}개`;$('#storageProgress').style.width=`${state.boxes.length/MAX_BOXES*100}%`;$('#storageLabelTitle').textContent=state.boxes.length?`${state.boxes.length}개 적재 중`:'빈 적재대';$('#storageLabelSub').textContent=state.boxes.length>=MAX_BOXES?'보관 한도에 도달했습니다. 감정소에서 상자를 처리하세요.':'한 더미에 5개씩, 최대 15개까지 보관할 수 있습니다.';
-      const purchaseLocked=storageAnimating||state.money<BOX_PRICE||state.boxes.length>=MAX_BOXES;
+      const purchase=PURCHASES[$('#purchaseType').value]||PURCHASES.standard;$('#purchasePrice').textContent=money(purchase.price);$('#purchaseNote').textContent=purchase.note;
+      const purchaseLocked=storageAnimating||state.money<purchase.price||state.boxes.length>=MAX_BOXES;
       $('#buyBoxButton').disabled=$('#buyAnotherButton').disabled=purchaseLocked;
       $('#buyBoxButton').textContent=$('#buyAnotherButton').textContent=state.boxes.length>=MAX_BOXES?'보관 한도 15개':'상자 1개 구매';
       $('#goInspectionButton').disabled=state.boxes.length===0;
-      const list=$('#storageList');list.innerHTML=state.boxes.length?state.boxes.map((b,i)=>`<div class="storage-row"><span>${i+1}. 미감정 상자</span><span>${localizedChest(b.grade)}</span></div>`).join(''):'<div class="storage-empty">보유한 상자가 없습니다.</div>';
+      const list=$('#storageList');list.innerHTML=state.boxes.length?state.boxes.map((b,i)=>`<div class="storage-row"><span>${i+1}. 미감정 상자</span><span>${chestNames[b.grade]}</span></div>`).join(''):'<div class="storage-empty">보유한 상자가 없습니다.</div>';
       if(rebuild)buildStorageStack();
     }
-    function updateGlobalUI(){$('#menuMoney').textContent=money(state.money);$('#menuBoxes').textContent=`${state.boxes.length}개`;$('#inspectionMoney').textContent=money(state.money);$('#inspectionBoxCount').textContent=`${state.boxes.length} / ${MAX_BOXES}`;$('#storageMoney').textContent=money(state.money)}
+    function discoveredCount(){return Object.keys(state.collection||{}).length}
+    function updateGlobalUI(){
+      const discovered=discoveredCount();
+      $('#menuMoney').textContent=money(state.money);$('#menuBoxes').textContent=`${state.boxes.length}개`;$('#menuCollection').textContent=`${discovered} / 60`;$('#menuDay').textContent=`DAY ${state.day}`;$('#menuStreak').textContent=`BEST ${state.bestStreak}`;
+      $('#inspectionMoney').textContent=money(state.money);$('#inspectionBoxCount').textContent=`${state.boxes.length} / ${MAX_BOXES}`;$('#storageMoney').textContent=money(state.money);
+      $('#dayStatusText').textContent=`DAY ${state.day} · ${state.processedToday}/8`;$('#streakText').textContent=`연속 ${state.streak}`;
+      $('#collectionProgressText').textContent=`발견 ${discovered} / 60`;$('#collectionCount').textContent=`${discovered} / 60`;$('#collectionProgress').style.width=`${discovered/60*100}%`;
+    }
+
 
     const mainMenu=$('#mainMenu'),inspectionGame=$('#inspectionGame'),storageGame=$('#storageGame'),collectionGame=$('#collectionGame');
+    let previousScreen=mainMenu,currentCollectionCategory='mimic';
     function showScreen(screen){[mainMenu,inspectionGame,storageGame,collectionGame].forEach(x=>x.classList.add('hidden'));screen.classList.remove('hidden');updateGlobalUI()}
     function updateMainFirstRun(){mainMenu.classList.toggle('first-run',!state.tutorialDone)}
     function goMain(){showScreen(mainMenu);updateMainFirstRun();updateGlobalUI()}
     function goInspection(){showScreen(inspectionGame);beginCurrentBox();resizeInspection()}
     function goStorage(){showScreen(storageGame);updateStorageUI();resizeStorage()}
 
-
-    let collectionCategory='mimic';
-    let collectionReturnScreen=mainMenu;
-    function openCollection(fromScreen=mainMenu){
-      collectionReturnScreen=fromScreen||mainMenu;
-      showScreen(collectionGame);
-      renderCollection();
-    }
+    function openCollection(){previousScreen=[inspectionGame,storageGame,mainMenu].find(screen=>!screen.classList.contains('hidden'))||mainMenu;showScreen(collectionGame);renderCollection()}
     function renderCollection(){
-      if(!$('#collectionGrid'))return;
-      state.collection=state.collection||{};
-      const categories=['mimic','treasure','explosive','junk'];
-      const total=categories.reduce((sum,key)=>sum+itemCatalog[key].items.length,0);
-      const discovered=Object.keys(state.collection).filter(key=>state.collection[key]?.count>0).length;
-      $('#collectionProgressText').textContent=currentLanguage==='ja'?`発見 ${discovered} / ${total}`:`발견 ${discovered} / ${total}`;
-      $('#collectionCount').textContent=`${discovered} / ${total}`;
-      $('#collectionProgress').style.width=`${discovered/total*100}%`;
-      const tabs=$('#collectionTabs');
-      tabs.innerHTML=categories.map(key=>`<button type="button" class="collection-tab ${collectionCategory===key?'active':''}" data-category="${key}">${localizedCategory(key)}</button>`).join('');
-      tabs.querySelectorAll('button').forEach(button=>button.onclick=()=>{collectionCategory=button.dataset.category;renderCollection()});
-      const category=itemCatalog[collectionCategory];
-      const foundInCategory=category.items.reduce((sum,_,index)=>sum+(state.collection[`${collectionCategory}:${index}`]?.count>0?1:0),0);
-      $('#collectionCategoryLabel').textContent=collectionCategory.toUpperCase();
-      $('#collectionCategoryTitle').textContent=currentLanguage==='ja'?`${localizedCategory(collectionCategory)}図鑑`:`${category.label} 도감`;
-      $('#collectionCategoryCount').textContent=currentLanguage==='ja'?`${foundInCategory} / ${category.items.length} 発見`:`${foundInCategory} / ${category.items.length} 발견`;
-      $('#collectionGrid').innerHTML=category.items.map((item,index)=>{
-        const record=state.collection[`${collectionCategory}:${index}`];
-        const localized=localizedItem(item);
-        const discoveredItem=Boolean(record?.count);
-        const stars=record?`${'★'.repeat(record.maxGrade+1)}${'☆'.repeat(4-record.maxGrade)}`:'☆☆☆☆☆';
-        return `<article class="collection-card ${discoveredItem?'discovered':'undiscovered'}"><div class="collection-card-top"><span>${String(index+1).padStart(2,'0')}</span><span>${stars}</span></div><h3>${localized.name}</h3><p>${localized.description}</p><div class="collection-card-meta"><span>${localizedRisk(item.risk)}</span><span>${currentLanguage==='ja'?`発見 ${record?.count||0}回`:`발견 ${record?.count||0}회`}</span></div></article>`;
-      }).join('');
-      if(currentLanguage==='ja')translateNode(collectionGame);
+      const entries=Object.entries(itemCatalog),tabs=$('#collectionTabs');
+      tabs.innerHTML=entries.map(([key,value])=>`<button type="button" class="collection-tab ${key===currentCollectionCategory?'active':''}" data-category="${key}">${value.label}</button>`).join('');
+      $$('#collectionTabs .collection-tab').forEach(button=>button.onclick=()=>{currentCollectionCategory=button.dataset.category;renderCollection()});
+      const category=itemCatalog[currentCollectionCategory];$('#collectionCategoryLabel').textContent=currentCollectionCategory.toUpperCase();$('#collectionCategoryTitle').textContent=`${category.label} 도감`;
+      const found=category.items.reduce((sum,_,index)=>sum+(state.collection[`${currentCollectionCategory}:${index}`]?1:0),0);$('#collectionCategoryCount').textContent=`${found} / 15 발견`;
+      $('#collectionGrid').innerHTML=category.items.map((item,index)=>{const record=state.collection[`${currentCollectionCategory}:${index}`],stars=record?'★'.repeat(record.bestGrade+1)+'☆'.repeat(4-record.bestGrade):'☆☆☆☆☆';return `<article class="collection-card ${record?'discovered':'undiscovered'}"><div class="collection-card-top"><span>${String(index+1).padStart(2,'0')}</span><strong>${stars}</strong></div><h3>${item.name}</h3><p>${item.description}</p><div class="collection-meta"><span>안전성 ${riskLabel[item.risk]}</span><span>${record?`${record.count}회 발견`:'미발견'}</span></div></article>`}).join('');
+      updateGlobalUI();
     }
-
-    const translationObserver=new MutationObserver(mutations=>{
-      if(currentLanguage!=='ja')return;
-      for(const mutation of mutations){
-        mutation.addedNodes.forEach(translateNode);
-        if(mutation.type==='characterData')translateNode(mutation.target);
-      }
-    });
-    translationObserver.observe(document.body,{subtree:true,childList:true,characterData:true});
-
+    function resetGame(button){
+      if(button.dataset.confirm!=='yes'){button.dataset.confirm='yes';button.textContent='한 번 더 눌러 초기화';setTimeout(()=>{button.dataset.confirm='';button.textContent=button.id==='resetSaveButton'?'저장 데이터 초기화':'초기화'},3000);return}
+      try{localStorage.removeItem(STORE_KEY);LEGACY_KEYS.forEach(key=>localStorage.removeItem(key))}catch(error){console.warn(error)}
+      state=defaultState();current=null;used=0;results=[];resolved=false;signatureAccepted=false;signatureLength=0;signatureContext.clearRect(0,0,workerSignature.width,workerSignature.height);signaturePadWrap.classList.remove('signed','ready');saveState();buildStorageStack();beginCurrentBox();renderCollection();updateStorageUI(false);goMain();button.dataset.confirm='';button.textContent=button.id==='resetSaveButton'?'저장 데이터 초기화':'초기화';
+    }
+    function showDayReport(){
+      const accuracy=Math.round(state.dayCorrect/8*100),grade=accuracy>=88?'S':accuracy>=75?'A':accuracy>=50?'B':accuracy>=25?'C':'D';
+      $('#dayReportTitle').textContent=`DAY ${state.day} · 평가 ${grade}`;$('#dayReportDetails').innerHTML=`<div class="result-detail-row"><span>처리한 상자</span><strong>${state.processedToday} / 8</strong></div><div class="result-detail-row"><span>완벽 감정</span><strong>${state.dayCorrect}회</strong></div><div class="result-detail-row"><span>정확도</span><strong>${accuracy}%</strong></div><div class="result-detail-row"><span>오늘 획득</span><strong>${money(state.dayReward)}</strong></div>`;$('#dayReport').classList.remove('hidden');
+    }
 
     const workerSignature=$('#workerSignature'),signaturePadWrap=$('#signaturePadWrap');
     const signatureContext=workerSignature.getContext('2d');
@@ -567,53 +423,30 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.181.1/build/three.m
       signatureLength+=Math.hypot(dx,dy);signatureContext.lineTo(point.x,point.y);signatureContext.stroke();signatureLast=point;event.preventDefault();
     });
     workerSignature.addEventListener('pointerup',finishSignature);workerSignature.addEventListener('pointercancel',finishSignature);workerSignature.addEventListener('pointerleave',event=>{if(signatureDrawing&&event.buttons===0)finishSignature()});
-    $('#startLoopButton').onclick=()=>goStorage();$('#modeInspectionButton').onclick=goInspection;$('#modeStorageButton').onclick=goStorage;$('#inspectionHome').onclick=goMain;$('#storageHome').onclick=goMain;$('#goStorageButton').onclick=goStorage;$('#emptyGoStorage').onclick=goStorage;$('#goInspectionButton').onclick=()=>{goInspection();if(onboardingActive&&guideMode==='move')setTimeout(startInspectionGuide,180)};
-    $('#modeCollectionButton').onclick=()=>openCollection(mainMenu);$('#inspectionCollection').onclick=()=>openCollection(inspectionGame);$('#collectionHome').onclick=()=>{showScreen(collectionReturnScreen);if(collectionReturnScreen===inspectionGame){updateInspectionUI();resizeInspection()}else if(collectionReturnScreen===storageGame){updateStorageUI();resizeStorage()}};
-    $('#selectKorean').onclick=()=>chooseLanguage('ko');$('#selectJapanese').onclick=()=>chooseLanguage('ja');
-    $('#buyBoxButton').onclick=buyBox;$('#buyAnotherButton').onclick=buyBox;
-    $('#clearBoxesButton').onclick=()=>{if(confirm(translateString('보유 상자를 모두 비울까요?'))){state.boxes=[];saveState();updateStorageUI()}};
-    const resetAllData=()=>{const message=currentLanguage==='ja'?'資金、保有箱、図鑑を初期状態に戻しますか？':'돈, 보유 상자, 도감 기록을 처음 상태로 되돌릴까요?';if(confirm(message)){state={money:1000,boxes:[],tutorialDone:false,collection:{}};saveState();beginCurrentBox();updateStorageUI();renderCollection();goMain()}};$('#resetSaveButton').onclick=resetAllData;
-    document.querySelectorAll('.sound-toggle').forEach(button=>button.onclick=toggleSound);
-    document.addEventListener('pointerdown',event=>{const button=event.target.closest('button');if(button&&!button.classList.contains('sound-toggle'))playSound('click')},{passive:true});
+    $('#startLoopButton').onclick=goStorage;$('#modeInspectionButton').onclick=goInspection;$('#modeStorageButton').onclick=goStorage;$('#modeCollectionButton').onclick=openCollection;$('#inspectionCollection').onclick=openCollection;$('#storageCollection').onclick=openCollection;
+    $('#collectionHome').onclick=()=>{showScreen(previousScreen||mainMenu);if(previousScreen===inspectionGame)resizeInspection();if(previousScreen===storageGame)resizeStorage()};
+    $('#inspectionHome').onclick=goMain;$('#storageHome').onclick=goMain;$('#goStorageButton').onclick=goStorage;$('#emptyGoStorage').onclick=goStorage;$('#goInspectionButton').onclick=()=>{goInspection();if(onboardingActive&&guideMode==='move')setTimeout(startInspectionGuide,180)};
+    $('#buyBoxButton').onclick=buyBox;$('#buyAnotherButton').onclick=buyBox;$('#purchaseType').onchange=()=>updateStorageUI(false);
+    $('#clearBoxesButton').onclick=()=>{state.boxes=[];saveState();updateStorageUI();beginCurrentBox()};
+    $('#resetSaveButton').onclick=()=>resetGame($('#resetSaveButton'));
     $('#ruleButton').onclick=()=>$('#ruleOverlay').classList.remove('hidden');$('#ruleClose').onclick=()=>$('#ruleOverlay').classList.add('hidden');
-    $('#resultNext').onclick=()=>{if(state.boxes.length)beginCurrentBox();else goStorage()};
+    $('#resultNext').onclick=()=>{$('#resultLayer').classList.remove('show');if(state.processedToday>=8)showDayReport();else if(state.boxes.length)beginCurrentBox();else goStorage()};
+    $('#dayNextButton').onclick=()=>{$('#dayReport').classList.add('hidden');state.day+=1;state.processedToday=0;state.dayCorrect=0;state.dayReward=0;saveState();goStorage()};
+    $('#soundToggle').onclick=()=>{state.sound=!state.sound;$('#soundToggle').textContent=`효과음 ${state.sound?'ON':'OFF'}`;saveState()};
     $$('#inspectionGame .action-button').forEach(b=>b.onclick=()=>resolveAction(b.dataset.action));
     $('#contentGuess').addEventListener('change',()=>{if($('#contentGuess').value!=='unknown'&&$('#riskGuess').value!=='unknown')advanceInspectionGuide('guess')});$('#riskGuess').addEventListener('change',()=>{if($('#contentGuess').value!=='unknown'&&$('#riskGuess').value!=='unknown')advanceInspectionGuide('guess')});
 
+
     const guideOverlay=$('#guideOverlay'),guideFocus=$('#guideFocus'),guideCard=$('#guideCard'),guideKicker=$('#guideKicker'),guideTitle=$('#guideTitle'),guideText=$('#guideText'),guideTask=$('#guideTask'),guideProgress=$('#guideProgress'),guideNext=$('#guideNext'),guideSkip=$('#guideSkip');
     let guideMode='',guideIndex=0;
-    const tutorialText={
-      ko:{
-        main:{next:'서명 후 버튼을 눌러주세요',title:'업무 인수서에 서명하세요',text:'쌓여 있는 서류 중 마지막 인수 확인서입니다. 서명란에 서명하면 업무를 시작합니다.',task:'서명란에 직접 서명해주세요.'},
-        storage:{next:'구매 버튼을 직접 눌러주세요',title:'첫 상자를 준비하세요',text:'적재소는 감정할 상자를 구매해 보관하는 장소입니다. 일반 입고 가격은 200 G입니다.',task:'강조된 상자 구매 버튼을 눌러주세요.'},
-        move:{next:'감정소 이동을 눌러주세요',title:'작업장 사이를 이동하세요',text:'상자를 준비했으니 감정소로 옮겨야 합니다. 이후에도 하단 이동 버튼으로 두 작업장을 오갈 수 있습니다.',task:'강조된 감정소 이동 버튼을 눌러주세요.'},
-        buttons:{next:'확인했어요',complete:'튜토리얼 완료',action:'직접 조작해주세요'},
-        steps:[
-          {target:'[data-tool="weight"]',title:'첫 번째 단서를 조사하세요',text:'무게 측정은 내용물의 움직임과 무게 중심을 알려줍니다.',task:'강조된 무게 측정 버튼을 눌러주세요.',action:'tool',value:'weight'},
-          {target:'#guideCluesTarget',title:'조사 기록을 확인하세요',text:'방금 얻은 단서가 조사 기록에 추가됐습니다. 모든 결과는 정확하지만 표현은 간접적입니다.',task:'기록을 읽은 뒤 확인 버튼을 눌러주세요.',action:'next'},
-          {target:'[data-tool="surface"]',title:'안전성 단서를 더 찾으세요',text:'표면 흔적은 내부의 긁힘과 충격 흔적으로 안전성을 추리하는 데 도움을 줍니다.',task:'강조된 표면 흔적 버튼을 눌러주세요.',action:'tool',value:'surface'},
-          {target:'#guideGuessTarget',title:'판정을 입력하세요',text:'카테고리와 안전성을 선택해야 실제 내용물과 판정을 비교할 수 있습니다.',task:'카테고리와 안전성을 모두 선택해주세요.',action:'guess'},
-          {target:'#guideOpenTarget',title:'상자를 개봉하세요',text:'개봉하면 상자가 하나 소비되며, 카테고리와 안전성 중 맞힌 항목에 따라 보상을 받습니다.',task:'강조된 상자 개봉 버튼을 눌러주세요.',action:'open'},
-          {target:'#resultLayer .result-card',title:'정산표를 확인하세요',text:'카테고리와 안전성 보상은 별 등급별 최대 보상의 절반씩 계산됩니다.',task:'정산 내역을 확인하면 첫 업무가 끝납니다.',action:'complete'}
-        ]
-      },
-      ja:{
-        main:{next:'署名してください',title:'業務引継書に署名してください',text:'積まれた書類の中にある最後の業務引継確認書です。署名欄に署名すると業務を開始します。',task:'署名欄に直接署名してください。'},
-        storage:{next:'購入ボタンを押してください',title:'最初の箱を準備してください',text:'保管所は鑑定する箱を購入して保管する場所です。通常入荷の価格は200 Gです。',task:'強調されている箱購入ボタンを押してください。'},
-        move:{next:'鑑定所へ移動してください',title:'作業場所を移動してください',text:'箱を準備したので鑑定所へ運びます。以後も画面下部の移動ボタンで二つの作業場所を行き来できます。',task:'強調されている鑑定所への移動ボタンを押してください。'},
-        buttons:{next:'確認しました',complete:'チュートリアル完了',action:'画面を操作してください'},
-        steps:[
-          {target:'[data-tool="weight"]',title:'最初の手掛かりを調査してください',text:'重量測定では内容物の動きと重心を確認できます。',task:'強調されている重量測定ボタンを押してください。',action:'tool',value:'weight'},
-          {target:'#guideCluesTarget',title:'調査記録を確認してください',text:'得られた手掛かりが調査記録に追加されました。結果は常に正確ですが、表現は間接的です。',task:'記録を読んでから確認ボタンを押してください。',action:'next'},
-          {target:'[data-tool="surface"]',title:'安全性の手掛かりを探してください',text:'表面痕跡では内部の擦れや衝撃痕を確認し、安全性を推理できます。',task:'強調されている表面痕跡ボタンを押してください。',action:'tool',value:'surface'},
-          {target:'#guideGuessTarget',title:'判定を入力してください',text:'カテゴリーと安全性を選択すると、実際の内容物と判定を比較できます。',task:'カテゴリーと安全性を両方選択してください。',action:'guess'},
-          {target:'#guideOpenTarget',title:'箱を開封してください',text:'開封すると箱を一つ消費し、カテゴリーと安全性の正解項目に応じて報酬を獲得します。',task:'強調されている開封ボタンを押してください。',action:'open'},
-          {target:'#resultLayer .result-card',title:'精算表を確認してください',text:'カテゴリーと安全性の報酬は、星等級ごとの最大報酬を半分ずつに分けて計算します。',task:'精算内容を確認すると最初の業務が終了します。',action:'complete'}
-        ]
-      }
-    };
-    const currentTutorial=()=>tutorialText[currentLanguage]||tutorialText.ko;
-    const inspectionGuideSteps=()=>currentTutorial().steps;
+    const inspectionGuideSteps=[
+      {target:'[data-tool="weight"]',title:'첫 번째 단서를 직접 조사하세요',text:'무게 측정은 내용물의 움직임과 무게 중심을 알려줍니다.',task:'강조된 무게 측정 버튼을 눌러주세요.',action:'tool',value:'weight'},
+      {target:'#guideCluesTarget',title:'조사 기록을 확인하세요',text:'방금 얻은 단서가 조사 기록에 추가됐습니다. 모든 결과는 정확하지만 표현은 간접적입니다.',task:'기록을 읽은 뒤 아래 확인 버튼을 눌러주세요.',action:'next'},
+      {target:'[data-tool="surface"]',title:'안전성 단서를 하나 더 찾으세요',text:'표면 흔적은 상자 안쪽의 긁힘과 충격 흔적으로 안전성을 알려줍니다.',task:'강조된 표면 흔적 버튼을 눌러주세요.',action:'tool',value:'surface'},
+      {target:'#guideGuessTarget',title:'판정을 직접 입력하세요',text:'카테고리와 안전성을 선택해야 개봉 결과와 비교할 수 있습니다.',task:'카테고리와 안전성을 모두 선택해주세요.',action:'guess'},
+      {target:'#guideOpenTarget',title:'상자를 개봉해 답을 확인하세요',text:'개봉하면 상자 한 개가 소비되고 등급별 보상을 카테고리와 안전성이 절반씩 나눠 받습니다.',task:'강조된 상자 개봉 버튼을 눌러주세요.',action:'open'},
+      {target:'#resultLayer .result-card',title:'정산표를 읽어보세요',text:'각 상자의 별 등급 최대 보상을 카테고리와 안전성이 절반씩 나눠 받습니다.',task:'정산 내역을 확인하면 첫 업무가 끝납니다.',action:'complete'}
+    ];
     function renderGuideProgress(total,current){guideProgress.innerHTML=Array.from({length:total},(_,i)=>`<span class="${i<=current?'done':''}"></span>`).join('')}
     function positionGuide(targetSelector,title,text,kicker='FIRST SHIFT',task='강조된 부분을 확인하세요.'){
       const target=$(targetSelector);if(!target)return;const rect=target.getBoundingClientRect(),pad=8;
@@ -621,26 +454,25 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.181.1/build/three.m
       guideKicker.textContent=kicker;guideTitle.textContent=title;guideText.textContent=text;guideTask.textContent=task;
       let left=rect.right+18,top=Math.max(18,rect.top);if(left+380>innerWidth-18)left=Math.max(18,rect.left-398);if(top+300>innerHeight-18)top=Math.max(18,innerHeight-318);guideCard.style.left=`${left}px`;guideCard.style.top=`${top}px`;
     }
-    function startMainGuide(){if(state.tutorialDone)return;const t=currentTutorial().main;onboardingActive=true;guideMode='main';guideIndex=0;guideOverlay.classList.remove('hidden');guideNext.textContent=t.next;guideNext.disabled=true;renderGuideProgress(9,0);positionGuide('#workerSignature',t.title,t.text,'FIRST SHIFT · 1 / 9',t.task)}
-    function startStorageGuide(){const t=currentTutorial().storage;guideMode='storage';guideIndex=0;guideOverlay.classList.remove('hidden');guideNext.textContent=t.next;guideNext.disabled=true;renderGuideProgress(8,0);positionGuide('#buyBoxButton',t.title,t.text,'FIRST SHIFT · 1 / 8',t.task)}
-    function startMoveGuide(){const t=currentTutorial().move;guideMode='move';guideIndex=0;guideOverlay.classList.remove('hidden');guideNext.textContent=t.next;guideNext.disabled=true;renderGuideProgress(8,1);positionGuide('#goInspectionButton',t.title,t.text,'FIRST SHIFT · 2 / 8',t.task)}
+    function startMainGuide(){if(state.tutorialDone)return;onboardingActive=true;guideMode='main';guideIndex=0;guideOverlay.classList.remove('hidden');guideNext.textContent='서명 후 버튼을 눌러주세요';guideNext.disabled=true;renderGuideProgress(9,0);positionGuide('#workerSignature','업무 인수서에 서명하세요','쌓여 있는 서류 중 마지막 인수 확인서입니다. 빈칸에 이름을 입력한 뒤 업무 인수 버튼을 눌러주세요.','FIRST SHIFT · 1 / 9','서명란에 이름을 입력하고 아래 버튼을 눌러주세요.')}
+    function startStorageGuide(){guideMode='storage';guideIndex=0;guideOverlay.classList.remove('hidden');guideNext.textContent='구매 버튼을 직접 눌러주세요';guideNext.disabled=true;renderGuideProgress(8,0);positionGuide('#buyBoxButton','첫 상자를 준비하세요','적재소는 감정할 상자를 사서 보관하는 장소입니다. 입고 방식마다 가격과 등급 확률이 다릅니다.','FIRST SHIFT · 1 / 8','강조된 상자 1개 구매 버튼을 직접 눌러주세요.')}
+    function startMoveGuide(){guideMode='move';guideIndex=0;guideOverlay.classList.remove('hidden');guideNext.textContent='감정소 이동을 눌러주세요';guideNext.disabled=true;renderGuideProgress(8,1);positionGuide('#goInspectionButton','작업장 사이를 이동하세요','상자를 준비했으니 이제 감정소로 옮겨야 합니다. 이후에도 하단 이동 버튼으로 적재소와 감정소를 오갈 수 있습니다.','FIRST SHIFT · 2 / 8','강조된 감정소 이동 버튼을 직접 눌러주세요.')}
     function startInspectionGuide(){guideMode='inspection';guideIndex=0;guideOverlay.classList.remove('hidden');updateInspectionGuide()}
-    function updateInspectionGuide(){const step=inspectionGuideSteps()[guideIndex],buttons=currentTutorial().buttons;guideNext.disabled=step.action!=='next'&&step.action!=='complete';guideNext.textContent=step.action==='next'?buttons.next:step.action==='complete'?buttons.complete:buttons.action;renderGuideProgress(8,guideIndex+2);positionGuide(step.target,step.title,step.text,`FIRST SHIFT · ${guideIndex+3} / 8`,step.task)}
+    function updateInspectionGuide(){const step=inspectionGuideSteps[guideIndex];guideNext.disabled=step.action!=='next'&&step.action!=='complete';guideNext.textContent=step.action==='next'?'확인했어요':step.action==='complete'?'튜토리얼 완료':'직접 조작해주세요';renderGuideProgress(8,guideIndex+2);positionGuide(step.target,step.title,step.text,`FIRST SHIFT · ${guideIndex+3} / 8`,step.task)}
     function advanceInspectionGuide(expectedAction,value=''){
       if(!onboardingActive||guideMode!=='inspection')return;
-      const steps=inspectionGuideSteps(),step=steps[guideIndex];if(!step||step.action!==expectedAction)return;if(value&&step.value!==value)return;
-      if(guideIndex<steps.length-1){guideIndex++;setTimeout(updateInspectionGuide,220)}
+      const step=inspectionGuideSteps[guideIndex];if(!step||step.action!==expectedAction)return;if(value&&step.value!==value)return;
+      if(guideIndex<inspectionGuideSteps.length-1){guideIndex++;setTimeout(updateInspectionGuide,220)}
     }
     function closeGuide(complete=false){guideOverlay.classList.add('hidden');if(complete){onboardingActive=false;state.tutorialDone=true;saveState();updateMainFirstRun()}}
-    guideNext.onclick=()=>{if(guideMode==='inspection'){const step=inspectionGuideSteps()[guideIndex];if(step.action==='next')advanceInspectionGuide('next');else if(step.action==='complete')closeGuide(true)}};
+    guideNext.onclick=()=>{if(guideMode==='inspection'){const step=inspectionGuideSteps[guideIndex];if(step.action==='next')advanceInspectionGuide('next');else if(step.action==='complete')closeGuide(true)}};
     guideSkip.onclick=()=>closeGuide(true);
 
-    createTools();updateGlobalUI();updateStorageUI();beginCurrentBox();renderCollection();updateMainFirstRun();updateSoundButtons();setTimeout(resizeSignaturePad,80);
-    const savedLanguage=localStorage.getItem(LANGUAGE_KEY);if(savedLanguage==='ja'||savedLanguage==='ko')$('#languageSelect').dataset.previous=savedLanguage;
+    createTools();renderCollection();$('#soundToggle').textContent=`효과음 ${state.sound?'ON':'OFF'}`;updateGlobalUI();updateStorageUI();beginCurrentBox();updateMainFirstRun();setTimeout(resizeSignaturePad,80);
 
     function resizeRenderer(pack,element){const w=element.clientWidth,h=element.clientHeight;if(w<=0||h<=0)return;pack.renderer.setSize(w,h,false);pack.camera.aspect=w/h;pack.camera.updateProjectionMatrix()}
     function resizeInspection(){resizeRenderer(inspectionPack,$('#inspectionScene'))}function resizeStorage(){resizeRenderer(storagePack,$('#storageScene'))}
-    addEventListener('resize',()=>{resizeInspection();resizeStorage();resizeSignaturePad();if(!guideOverlay.classList.contains('hidden')){if(guideMode==='storage'){const t=currentTutorial().storage;positionGuide('#buyBoxButton',t.title,t.text,'FIRST SHIFT · 1 / 8',t.task)}else if(guideMode==='move'){const t=currentTutorial().move;positionGuide('#goInspectionButton',t.title,t.text,'FIRST SHIFT · 2 / 8',t.task)}else if(guideMode==='inspection')updateInspectionGuide()}});
+    addEventListener('resize',()=>{resizeInspection();resizeStorage();resizeSignaturePad();if(!guideOverlay.classList.contains('hidden')){if(guideMode==='storage')positionGuide('#buyBoxButton','첫 상자를 준비하세요','적재소는 감정할 상자를 사서 보관하는 장소입니다. 입고 방식마다 가격과 등급 확률이 다릅니다.','FIRST SHIFT · 1 / 8','강조된 상자 1개 구매 버튼을 직접 눌러주세요.');else if(guideMode==='move')positionGuide('#goInspectionButton','작업장 사이를 이동하세요','상자를 준비했으니 이제 감정소로 옮겨야 합니다. 이후에도 하단 이동 버튼으로 적재소와 감정소를 오갈 수 있습니다.','FIRST SHIFT · 2 / 8','강조된 감정소 이동 버튼을 직접 눌러주세요.');else if(guideMode==='inspection')updateInspectionGuide()}});
     const clock=new THREE.Clock();
     function animate(){requestAnimationFrame(animate);const d=Math.min(clock.getDelta(),.05),t=clock.elapsedTime;
       if(current&&insMode==='idle')inspectionRoot.position.y=.02+Math.sin(t*1.2)*.018;else if(insMode!=='idle'){insTime+=d;const p=Math.min(insTime/.75,1);if(insMode==='lift')inspectionRoot.position.y=.02+Math.sin(p*Math.PI)*.26;else inspectionRoot.rotation.z=Math.sin(p*Math.PI*6)*Math.sin(p*Math.PI)*.035;if(p>=1){insMode='idle';inspectionRoot.position.set(0,.02,0);inspectionRoot.rotation.z=0}}
@@ -659,4 +491,56 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.181.1/build/three.m
       }else{storageRoot.position.y=Math.sin(t*.9)*.008;storageDropLight.intensity=0}
       inspectionPack.renderer.render(inspectionPack.scene,inspectionPack.camera);storagePack.renderer.render(storagePack.scene,storagePack.camera)
     }
+
+
+    // ==============================
+    // 한국어 / 일본어 공통 언어 처리
+    // ==============================
+    const LANGUAGE_KEY='box_appraisal_language_v2';
+    let currentLanguage='ko';
+    const JA={
+      '상자 감정소':'箱鑑定所','상자 적재소':'箱保管所','상자 도감':'箱図鑑','도감':'図鑑','규정':'規定','초기화':'初期化','저장 데이터 초기화':'セーブデータを初期化',
+      '임무 시작':'業務開始','조사 도구':'調査道具','조사 기록':'調査記録','최종 추리':'最終推理','적재소로 이동':'保管所へ移動','감정소로 이동':'鑑定所へ移動',
+      '상자 1개 구매':'箱を1個購入','보유 상자 비우기':'保有箱をすべて削除','입고 방식':'入荷方式','일반 입고':'通常入荷','안전 입고':'安全入荷','고급 입고':'高級入荷','압류품 입고':'押収品入荷','미확인 경매':'未確認オークション',
+      '미감정 상자':'未鑑定の箱','보유 상자':'保有箱','빈 적재대':'空の保管台','상자 없음':'箱なし','감정할 상자가 없습니다':'鑑定する箱がありません','적재소에서 상자를 구매하세요':'保管所で箱を購入してください',
+      '예상 카테고리':'予想カテゴリー','예상 안전성':'予想安全性','판단 보류':'判断保留','생물':'生物','귀중품':'貴重品','폭발물':'爆発物','잡동사니':'雑貨','안전':'安全','주의':'注意','위험':'危険',
+      '상자 개봉':'箱を開封','추리 결과 확인':'推理結果を確認','개봉 중':'開封中','정답 공개':'答えを公開','다음 상자':'次の箱','효과음 ON':'効果音 ON','효과음 OFF':'効果音 OFF',
+      '무게 측정':'重量測定','표면 온도':'表面温度','투과 검사':'透過検査','표면 흔적':'表面痕跡','반응 시약':'反応試薬','봉인 검사':'封印検査','정확':'正確',
+      '업무 인수 확인서':'業務引継確認書','작업자 서명':'作業員署名','마우스로 이곳에 서명하세요':'マウスでここに署名してください','서명을 마치고 마우스를 떼면 적재소로 이동합니다.':'署名を終えてマウスを離すと保管所へ移動します。',
+      '첫 상자를 준비하세요':'最初の箱を用意してください','구매 버튼을 직접 눌러주세요':'購入ボタンを押してください','작업장 사이를 이동하세요':'作業場所を移動してください','감정소 이동을 눌러주세요':'鑑定所への移動を押してください',
+      '첫 번째 단서를 직접 조사하세요':'最初の手掛かりを調査してください','조사 기록을 확인하세요':'調査記録を確認してください','안전성 단서를 하나 더 찾으세요':'安全性の手掛かりをもう一つ調べてください','판정을 직접 입력하세요':'判定を入力してください','상자를 개봉해 답을 확인하세요':'箱を開封して答えを確認してください','정산표를 읽어보세요':'精算表を確認してください','튜토리얼 완료':'チュートリアル完了','직접 조작해주세요':'画面を操作してください','확인했어요':'確認しました','건너뛰기':'スキップ',
+      '완벽한 감정':'完全鑑定','부분 감정 성공':'一部鑑定成功','감정 실패':'鑑定失敗','실제 물품':'実際の品物','설명':'説明','실제 카테고리':'実際のカテゴリー','실제 안전성':'実際の安全性','카테고리 추리':'カテゴリー判定','안전성 추리':'安全性判定','총 보상':'合計報酬','정답':'正解','오답':'不正解',
+      '나무 상자':'木箱','은 상자':'銀の箱','금 상자':'金の箱','다이아 상자':'ダイヤの箱','봉인된 상자':'封印された箱'
+    };
+    function translateText(text){
+      if(currentLanguage!=='ja')return text;
+      const trimmed=text.trim();
+      if(JA[trimmed])return text.replace(trimmed,JA[trimmed]);
+      return text
+        .replace(/보유 상자/g,'保有箱').replace(/개/g,'個').replace(/연속/g,'連続')
+        .replace(/정답/g,'正解').replace(/오답/g,'不正解').replace(/총 보상/g,'合計報酬')
+        .replace(/카테고리/g,'カテゴリー').replace(/안전성/g,'安全性').replace(/위험도/g,'安全性')
+        .replace(/상자/g,'箱').replace(/구매/g,'購入').replace(/입고/g,'入荷').replace(/감정소/g,'鑑定所').replace(/적재소/g,'保管所');
+    }
+    function applyLanguage(root=document){
+      document.documentElement.lang=currentLanguage==='ja'?'ja':'ko';
+      document.title=currentLanguage==='ja'?'箱鑑定所':'상자 감정소';
+      const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
+      const nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
+      nodes.forEach(node=>{if(node.parentElement&& !['SCRIPT','STYLE'].includes(node.parentElement.tagName)){const n=translateText(node.nodeValue);if(n!==node.nodeValue)node.nodeValue=n}});
+      root.querySelectorAll?.('option').forEach(o=>{const n=translateText(o.textContent);if(n!==o.textContent)o.textContent=n});
+    }
+    let languageObserver=null;
+    function chooseLanguage(lang){
+      currentLanguage=lang;try{localStorage.setItem(LANGUAGE_KEY,lang)}catch(e){}
+      $('#languageSelect')?.classList.add('hidden');applyLanguage(document);
+      if(languageObserver)languageObserver.disconnect();
+      languageObserver=new MutationObserver(mutations=>{if(currentLanguage!=='ja')return;mutations.forEach(m=>m.addedNodes.forEach(n=>{if(n.nodeType===1)applyLanguage(n);else if(n.nodeType===3){const t=translateText(n.nodeValue);if(t!==n.nodeValue)n.nodeValue=t}}))});
+      languageObserver.observe(document.body,{subtree:true,childList:true,characterData:false});
+    }
+    $('#selectKorean')?.addEventListener('click',()=>chooseLanguage('ko'));
+    $('#selectJapanese')?.addEventListener('click',()=>chooseLanguage('ja'));
+    let savedLanguage=null;try{savedLanguage=localStorage.getItem(LANGUAGE_KEY)}catch(e){}
+    if(savedLanguage==='ko'||savedLanguage==='ja')chooseLanguage(savedLanguage);
+
     resizeInspection();resizeStorage();animate();
