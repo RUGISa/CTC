@@ -113,3 +113,78 @@
 
 .language-select{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;background:rgba(33,32,29,.72);backdrop-filter:blur(8px)}
 .language-select.hidden{display:none}.language-card{width:min(520px,calc(100vw - 36px));padding:42px;background:#faf9f5;border:1px solid #d6d2c8;box-shadow:0 24px 70px rgba(0,0,0,.28);text-align:center}.language-kicker{font-size:10px;letter-spacing:.2em;color:#817c73}.language-card h1{font-size:28px;line-height:1.45;margin:12px 0 28px}.language-card h1 span{font-size:22px;font-weight:650}.language-buttons{display:grid;grid-template-columns:1fr 1fr;gap:12px}.language-buttons button{min-height:86px;border:1px solid #cfcac0;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer}.language-buttons button:hover{background:#292927;color:#fff}.language-buttons strong{font-size:17px}.language-buttons small{font-size:9px;letter-spacing:.14em}
+
+/* macOS/short viewport menu fit fix */
+.main-menu{
+  min-height:100dvh;
+  height:100dvh;
+  padding:20px;
+  align-items:center;
+  overflow:hidden;
+}
+.main-menu .menu-shell{
+  width:min(980px,100%);
+  max-height:calc(100dvh - 40px);
+  min-height:0;
+  overflow:hidden;
+}
+.main-menu .menu-intro{
+  min-height:0;
+  height:auto;
+}
+.main-menu .menu-options{
+  min-height:0;
+  max-height:calc(100dvh - 40px);
+  justify-content:flex-start;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  scrollbar-gutter:stable;
+  padding-bottom:18px;
+}
+.main-menu .reset-save{
+  position:sticky;
+  z-index:12;
+  bottom:0;
+  align-self:stretch;
+  width:100%;
+  min-height:42px;
+  margin-top:6px;
+  padding:0 12px;
+  border:1px solid var(--line-dark);
+  color:var(--sub);
+  background:rgba(250,249,245,.98);
+  box-shadow:0 -12px 18px rgba(250,249,245,.96);
+  text-align:center;
+  text-decoration:none;
+  font-size:10px;
+  font-weight:850;
+}
+.main-menu .reset-save:hover{
+  color:#fff;
+  border-color:var(--black);
+  background:var(--black);
+}
+@media(max-height:820px){
+  .main-menu{padding:12px}
+  .main-menu .menu-shell{max-height:calc(100dvh - 24px)}
+  .main-menu .menu-intro{padding:30px}
+  .main-menu .menu-eyebrow{margin-top:28px}
+  .main-menu .menu-title{font-size:52px}
+  .main-menu .menu-description{margin-top:16px;line-height:1.65}
+  .main-menu .menu-options{max-height:calc(100dvh - 24px);padding:24px;gap:9px}
+  .main-menu .menu-stats{margin-bottom:4px}
+  .main-menu .mode-button{min-height:104px;padding:15px 18px}
+  .main-menu .start-loop-button{min-height:58px}
+}
+@media(max-height:700px){
+  .main-menu .menu-intro{padding:24px}
+  .main-menu .menu-title{font-size:44px}
+  .main-menu .menu-description{font-size:11px}
+  .main-menu .menu-footer{display:none}
+  .main-menu .menu-options{padding:18px;gap:7px}
+  .main-menu .menu-stat{padding:9px 10px}
+  .main-menu .menu-stat strong{font-size:15px}
+  .main-menu .mode-button{min-height:88px;padding:12px 14px}
+  .main-menu .mode-title{font-size:15px}
+  .main-menu .mode-description{margin-top:4px;line-height:1.45}
+}
