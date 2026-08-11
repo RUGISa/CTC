@@ -118,7 +118,13 @@
 
     <footer class="bottom-panel">
       <p id="currentRewardText" class="bottom-note"><strong>1성 상자</strong> · 카테고리 정답 +150 G · 안전성 정답 +150 G<br>둘 다 맞히면 총 300 G를 받습니다.</p>
-      <div id="guideOpenTarget" class="action-grid"><button class="action-button" data-action="open"><span class="action-title">상자 개봉</span><span class="action-info">추리 결과 확인</span></button></div>
+      <div id="guideOpenTarget" class="action-grid">
+        <div id="lidDragControl" class="lid-drag-control" aria-live="polite">
+          <div class="lid-drag-track"><span id="lidDragFill" class="lid-drag-fill"></span><span class="lid-drag-arrow">↑</span></div>
+          <span id="lidDragTitle" class="action-title">뚜껑을 위로 끌어 개봉</span>
+          <span id="lidDragInfo" class="action-info">카테고리와 안전성을 선택하면 상자를 직접 열 수 있습니다.</span>
+        </div>
+      </div>
       <button id="goStorageButton" class="go-storage-button" type="button">적재소로 이동</button>
     </footer>
   </main>
