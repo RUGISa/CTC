@@ -397,19 +397,39 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.181.1/build/three.m
       const ja=$('#selectJapanese');
       if(!overlay)return;
 
-      const saved=localStorage.getItem(LANGUAGE_KEY);
+      const hardHide=()=>{
+        overlay.hidden=true;
+        overlay.classList.add('hidden');
+        overlay.style.setProperty('display','none','important');
+        overlay.style.visibility='hidden';
+        overlay.style.pointerEvents='none';
+        overlay.setAttribute('aria-hidden','true');
+      };
+
+      const hardShow=()=>{
+        overlay.hidden=false;
+        overlay.classList.remove('hidden');
+        overlay.style.removeProperty('display');
+        overlay.style.display='grid';
+        overlay.style.visibility='visible';
+        overlay.style.pointerEvents='auto';
+        overlay.setAttribute('aria-hidden','false');
+      };
+
+      let saved=null;
+      try{saved=localStorage.getItem(LANGUAGE_KEY)}catch(error){console.warn(error)}
+
       if(saved==='ko'||saved==='ja'){
         document.documentElement.lang=saved==='ja'?'ja':'ko';
-        overlay.classList.add('hidden');
+        hardHide();
       }else{
-        overlay.classList.remove('hidden');
+        hardShow();
       }
 
       const choose=(lang)=>{
         try{localStorage.setItem(LANGUAGE_KEY,lang)}catch(error){console.warn(error)}
         document.documentElement.lang=lang==='ja'?'ja':'ko';
-        overlay.classList.add('hidden');
-        overlay.setAttribute('aria-hidden','true');
+        hardHide();
         requestAnimationFrame(()=>{
           resizeInspection();
           resizeStorage();

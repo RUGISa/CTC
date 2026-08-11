@@ -156,3 +156,7 @@
   .language-card{padding:25px}
   .language-buttons{grid-template-columns:1fr}
 }
+
+
+/* Language overlay hard-hide: prevents stale/cached CSS from exposing it */
+#languageSelect[hidden]{display:none!important;visibility:hidden!important;pointer-events:none!important}
