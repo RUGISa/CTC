@@ -269,11 +269,6 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.181.1/build/three.m
     const storagePack=makeScene($('#storageCanvas'));
     const storageRoot=new THREE.Group();storageRoot.rotation.y=-.12;storagePack.scene.add(storageRoot);
     const storageDropLight=new THREE.PointLight(0xffd996,0,5,2);storageDropLight.position.set(0,4,2);storagePack.scene.add(storageDropLight);
-    const inspectionSceneElement=$('#inspectionScene');
-    const inspectionGlowOverlay=document.createElement('div');inspectionGlowOverlay.id='inspectionGlowOverlay';inspectionSceneElement.appendChild(inspectionGlowOverlay);
-    const inspectionOpenLight=new THREE.PointLight(0xfff1b3,0,8,2);inspectionOpenLight.position.set(0,.95,.28);inspectionRoot.add(inspectionOpenLight);
-    function createGlowTexture(){const c=document.createElement('canvas');c.width=c.height=256;const g=c.getContext('2d');const grad=g.createRadialGradient(128,128,10,128,128,128);grad.addColorStop(0,'rgba(255,255,245,1)');grad.addColorStop(.22,'rgba(255,241,186,.94)');grad.addColorStop(.52,'rgba(255,227,140,.48)');grad.addColorStop(1,'rgba(255,227,140,0)');g.fillStyle=grad;g.fillRect(0,0,256,256);return new THREE.CanvasTexture(c)}
-    const inspectionGlowSprite=new THREE.Sprite(new THREE.SpriteMaterial({map:createGlowTexture(),transparent:true,opacity:0,depthWrite:false,blending:THREE.AdditiveBlending}));inspectionGlowSprite.scale.set(2.8,2.8,1);inspectionGlowSprite.position.set(0,.72,.52);inspectionGlowSprite.visible=false;inspectionRoot.add(inspectionGlowSprite);
 
     const tools=[
       {id:'weight',icon:'㎏',name:'무게 측정',info:'내용물의 특징'},
@@ -309,7 +304,7 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.181.1/build/three.m
 
     function beginCurrentBox(){
       current=state.boxes.length?state.boxes[0]:null;if(current&&!itemCatalog[current.content])current.content='mimic';used=0;results=[];resolved=false;$('#contentGuess').value='unknown';$('#riskGuess').value='unknown';$('#resultLayer').classList.remove('show');
-      lidProgress=0;lidTargetProgress=null;lidOpenCommitted=false;inspectionOpenLight.intensity=0;inspectionGlowSprite.visible=false;inspectionGlowSprite.material.opacity=0;inspectionGlowOverlay.style.opacity='0';
+      lidProgress=0;lidTargetProgress=null;lidOpenCommitted=false;
       if(current){buildChest(inspectionModel,current.grade);inspectionRoot.visible=true;$('#inspectionEmpty').classList.add('hidden')}else{clear(inspectionModel);inspectionRoot.visible=false;$('#inspectionEmpty').classList.remove('hidden')}
       setLidProgress(0);
       updateInspectionUI();
@@ -542,13 +537,6 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.181.1/build/three.m
           if(lidProgress>=1&&!lidOpenCommitted){lidOpenCommitted=true;setTimeout(()=>resolveAction('open'),240)}
         }
       }
-      const openGlow=current?Math.max(0,Math.min(1,(lidProgress-.64)/.28)):0;
-      const glowPulse=1+Math.sin(t*10.5)*.04;
-      inspectionOpenLight.intensity=openGlow*5.4;
-      inspectionGlowSprite.visible=openGlow>.01;
-      inspectionGlowSprite.material.opacity=openGlow*.92;
-      inspectionGlowSprite.scale.set(2.8*glowPulse,2.8*glowPulse,1);
-      inspectionGlowOverlay.style.opacity=String(openGlow*.86);
       if(storageDropAnimation){
         const a=storageDropAnimation;a.time+=d;const p=Math.min(a.time/a.duration,1);const fall=Math.min(p/.72,1);const ease=fall<1?fall*fall:1;const settle=p>.72?(p-.72)/.28:0;
         a.mesh.position.x=a.targetX;a.mesh.position.z=a.targetZ;
