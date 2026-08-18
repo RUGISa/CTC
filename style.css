@@ -106,3 +106,6 @@
 #inspectionCanvas{touch-action:none}
 #inspectionCanvas.lid-ready{cursor:grab}
 #inspectionCanvas.lid-ready:active{cursor:grabbing}
+
+
+#inspectionGlowOverlay{position:absolute;left:50%;top:57%;z-index:6;width:min(44vw,520px);height:min(44vw,520px);transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;opacity:0;background:radial-gradient(circle,rgba(255,250,228,.96) 0%,rgba(255,238,172,.82) 18%,rgba(255,221,132,.38) 42%,rgba(255,221,132,.12) 60%,rgba(255,221,132,0) 74%);filter:blur(12px);mix-blend-mode:screen;transition:opacity .08s linear}

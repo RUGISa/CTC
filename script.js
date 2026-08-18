@@ -232,11 +232,11 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.181.1/build/three.m
       addLidPart(box(2.72,.13,.13,trim,0,.24,2.075));
 
       if(grade===0){
-        [-.36,.02].forEach(y=>addBodyPart(box(2.72,.06,2.03,mat(0x6a4a2d,.02,.9),0,y,1.03)));
-        [-.16,.20].forEach(y=>addLidPart(box(2.74,.05,2.03,mat(0x785333,.02,.92),0,y,1.025)));
+        [-.36,.02].forEach(y=>addBodyPart(box(2.72,.06,.05,mat(0x6a4a2d,.02,.9),0,y,1.045)));
+        [-.16,.20].forEach(y=>addLidPart(box(2.74,.05,.05,mat(0x785333,.02,.92),0,y,2.045)));
         [-.75,0,.75].forEach(x=>{
           addBodyPart(box(.05,1.08,.04,mat(0x4f3722,.01,.95),x,-.20,1.035));
-          addLidPart(box(.045,.40,.04,mat(0x4f3722,.01,.95),x,.25,2.06));
+          addLidPart(box(.045,.40,.04,mat(0x4f3722,.01,.95),x,.25,2.035));
         });
       }
       if(grade===1){
@@ -313,6 +313,11 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.181.1/build/three.m
     const storagePack=makeScene($('#storageCanvas'));
     const storageRoot=new THREE.Group();storageRoot.rotation.y=-.12;storagePack.scene.add(storageRoot);
     const storageDropLight=new THREE.PointLight(0xffd996,0,5,2);storageDropLight.position.set(0,4,2);storagePack.scene.add(storageDropLight);
+    const inspectionSceneElement=$('#inspectionScene');
+    const inspectionGlowOverlay=document.createElement('div');inspectionGlowOverlay.id='inspectionGlowOverlay';inspectionSceneElement.appendChild(inspectionGlowOverlay);
+    const inspectionOpenLight=new THREE.PointLight(0xfff1b3,0,8,2);inspectionOpenLight.position.set(0,.95,.28);inspectionRoot.add(inspectionOpenLight);
+    function createGlowTexture(){const c=document.createElement('canvas');c.width=c.height=256;const g=c.getContext('2d');const grad=g.createRadialGradient(128,128,10,128,128,128);grad.addColorStop(0,'rgba(255,255,245,1)');grad.addColorStop(.22,'rgba(255,241,186,.94)');grad.addColorStop(.52,'rgba(255,227,140,.48)');grad.addColorStop(1,'rgba(255,227,140,0)');g.fillStyle=grad;g.fillRect(0,0,256,256);return new THREE.CanvasTexture(c)}
+    const inspectionGlowSprite=new THREE.Sprite(new THREE.SpriteMaterial({map:createGlowTexture(),transparent:true,opacity:0,depthWrite:false,blending:THREE.AdditiveBlending}));inspectionGlowSprite.scale.set(2.8,2.8,1);inspectionGlowSprite.position.set(0,.72,.52);inspectionGlowSprite.visible=false;inspectionRoot.add(inspectionGlowSprite);
 
     const tools=[
       {id:'weight',icon:'㎏',name:'무게 측정',info:'내용물의 특징'},
@@ -348,7 +353,7 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.181.1/build/three.m
 
     function beginCurrentBox(){
       current=state.boxes.length?state.boxes[0]:null;if(current&&!itemCatalog[current.content])current.content='mimic';used=0;results=[];resolved=false;$('#contentGuess').value='unknown';$('#riskGuess').value='unknown';$('#resultLayer').classList.remove('show');
-      lidDragging=false;lidPointerId=null;lidProgress=0;lidTargetProgress=null;lidOpenCommitted=false;
+      lidDragging=false;lidPointerId=null;lidProgress=0;lidTargetProgress=null;lidOpenCommitted=false;inspectionOpenLight.intensity=0;inspectionGlowSprite.visible=false;inspectionGlowSprite.material.opacity=0;inspectionGlowOverlay.style.opacity='0';
       if(current){buildChest(inspectionModel,current.grade);inspectionRoot.visible=true;$('#inspectionEmpty').classList.add('hidden')}else{clear(inspectionModel);inspectionRoot.visible=false;$('#inspectionEmpty').classList.remove('hidden')}
       setLidProgress(0);
       updateInspectionUI();
@@ -414,7 +419,7 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.181.1/build/three.m
 
     function updateInspectionUI(){
       $('#inspectionMoney').textContent=money(state.money);$('#inspectionInventoryText').textContent=`보유 상자 ${state.boxes.length} / ${MAX_BOXES}개`;$('#inspectionBoxCount').textContent=`${state.boxes.length} / ${MAX_BOXES}`;$('#inventoryProgress').style.width=`${state.boxes.length/MAX_BOXES*100}%`;
-      if(current){$('#caseNumber').textContent='STORED BOX';$('#caseName').textContent=chestNames[current.grade];$('#caseSub').textContent=`${current.id.split('-').slice(0,2).join('-')} · ${chestDescriptor(current.grade)}`}else{$('#caseName').textContent='상자 없음';$('#caseSub').textContent='적재소에서 상자를 구매하세요'}
+      if(current){$('#caseNumber').textContent='STORED BOX';$('#caseName').textContent=chestNames[current.grade];$('#caseSub').textContent=`${current.id.split('-').slice(0,2).join('-')} · 미감정 상태`}else{$('#caseName').textContent='상자 없음';$('#caseSub').textContent='적재소에서 상자를 구매하세요'}
       $$('#inspectionCount .inspection-dot').forEach((d,i)=>d.className=`inspection-dot ${i<used?'used':'available'}`);
       $('#clueList').innerHTML=results.length?results.map((r,i)=>`<article class="clue-item"><div class="clue-head"><span class="clue-name">${i+1}. ${r.name}</span><span class="clue-confidence">정확</span></div><p class="clue-result">${r.text}</p></article>`).join(''):'<div class="clue-empty">아직 기록된 조사 결과가 없습니다.</div>';
       $$('#toolList .tool-button').forEach(b=>b.disabled=!current||resolved||used>=4||results.some(r=>r.id===b.dataset.tool));
@@ -534,7 +539,7 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.181.1/build/three.m
       $('#buyBoxButton').disabled=$('#buyAnotherButton').disabled=purchaseLocked;
       $('#buyBoxButton').textContent=$('#buyAnotherButton').textContent=state.boxes.length>=MAX_BOXES?'보관 한도 15개':'상자 1개 구매';
       $('#goInspectionButton').disabled=state.boxes.length===0;
-      const list=$('#storageList');list.innerHTML=state.boxes.length?state.boxes.map((b,i)=>`<div class="storage-row"><div class="storage-row-main"><strong>${i+1}. ${chestNames[b.grade]}</strong><small>${chestDescriptor(b.grade)}</small></div><span class="storage-row-grade">★ ${b.grade+1}</span></div>`).join(''):'<div class="storage-empty">보유한 상자가 없습니다.</div>';
+      const list=$('#storageList');list.innerHTML=state.boxes.length?state.boxes.map((b,i)=>`<div class="storage-row"><div class="storage-row-main"><strong>${i+1}. ${chestNames[b.grade]}</strong><small>미감정 상태</small></div><span class="storage-row-grade">★ ${b.grade+1}</span></div>`).join(''):'<div class="storage-empty">보유한 상자가 없습니다.</div>';
       if(rebuild)buildStorageStack();
     }
     function updateGlobalUI(){$('#menuMoney').textContent=money(state.money);$('#menuBoxes').textContent=`${state.boxes.length}개`;$('#inspectionMoney').textContent=money(state.money);$('#inspectionBoxCount').textContent=`${state.boxes.length} / ${MAX_BOXES}`;$('#storageMoney').textContent=money(state.money)}
@@ -630,6 +635,13 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.181.1/build/three.m
           if(lidProgress>=1&&!lidOpenCommitted){lidOpenCommitted=true;setTimeout(()=>resolveAction('open'),240)}
         }
       }
+      const openGlow=current?Math.max(0,Math.min(1,(lidProgress-.64)/.28)):0;
+      const glowPulse=1+Math.sin(t*10.5)*.04;
+      inspectionOpenLight.intensity=openGlow*5.4;
+      inspectionGlowSprite.visible=openGlow>.01;
+      inspectionGlowSprite.material.opacity=openGlow*.92;
+      inspectionGlowSprite.scale.set(2.8*glowPulse,2.8*glowPulse,1);
+      inspectionGlowOverlay.style.opacity=String(openGlow*.86);
       if(storageDropAnimation){
         const a=storageDropAnimation;a.time+=d;const p=Math.min(a.time/a.duration,1);const fall=Math.min(p/.72,1);const ease=fall<1?fall*fall:1;const settle=p>.72?(p-.72)/.28:0;
         a.mesh.position.x=a.targetX;a.mesh.position.z=a.targetZ;
