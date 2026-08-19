@@ -7,48 +7,15 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.181.1/build/three.m
     const RISK_REWARD=150;
     const MAX_BOXES=15;
     const riskLabel={safe:'안전',warning:'주의',danger:'위험'};
-    const chestProfiles=[
-      {
-        name:'나무 상자',
-        value:450,
-        material:'거친 목재와 무광 철재 보강',
-        feel:'투박하고 묵직한 기본형',
-        palette:{body:0x765437,panel:0x8a6442,trim:0x373633,accent:0x9e7b52,m:.08,r:.82}
-      },
-      {
-        name:'은 상자',
-        value:518,
-        material:'차갑게 식은 브러시드 실버',
-        feel:'매끈하고 단단한 공업형',
-        palette:{body:0x6d7478,panel:0x858b8e,trim:0xb1b4b4,accent:0x494f52,m:.72,r:.34}
-      },
-      {
-        name:'금 상자',
-        value:585,
-        material:'광택 있는 황동빛 금속 판넬',
-        feel:'화려하고 무게감 있는 고급형',
-        palette:{body:0x96691e,panel:0xaf812c,trim:0xd0a244,accent:0x39352f,m:.65,r:.34}
-      },
-      {
-        name:'다이아 상자',
-        value:653,
-        material:'반투명 광물 패널과 냉기 어린 금속',
-        feel:'서늘하고 날카로운 보석형',
-        palette:{body:0x3f7580,panel:0x548994,trim:0x83b1b8,accent:0x29454b,m:.54,r:.29}
-      },
-      {
-        name:'봉인된 상자',
-        value:720,
-        material:'검은 봉인재와 밀랍 인장',
-        feel:'불길하고 엄숙한 특수형',
-        palette:{body:0x28272a,panel:0x343237,trim:0x555158,accent:0x71586e,m:.46,r:.42}
-      }
+    const chestNames=['나무 상자','은 상자','금 상자','다이아 상자','봉인된 상자'];
+    const chestValues=[450,518,585,653,720];
+    const palettes=[
+      {body:0x765437,panel:0x8a6442,trim:0x373633,accent:0x9e7b52,m:.08,r:.82},
+      {body:0x6d7478,panel:0x858b8e,trim:0xb1b4b4,accent:0x494f52,m:.72,r:.34},
+      {body:0x96691e,panel:0xaf812c,trim:0xd0a244,accent:0x39352f,m:.65,r:.34},
+      {body:0x3f7580,panel:0x548994,trim:0x83b1b8,accent:0x29454b,m:.54,r:.29},
+      {body:0x28272a,panel:0x343237,trim:0x555158,accent:0x71586e,m:.46,r:.42}
     ];
-    const chestNames=chestProfiles.map(profile=>profile.name);
-    const chestValues=chestProfiles.map(profile=>profile.value);
-    const palettes=chestProfiles.map(profile=>profile.palette);
-    const chestProfile=grade=>chestProfiles[grade]||chestProfiles[0];
-    const chestDescriptor=grade=>{const profile=chestProfile(grade);return `${profile.material} · ${profile.feel}`};
     // ==============================
     // 카테고리별 아이템 데이터
     // 위험도: 1~5 위험 / 6~10 주의 / 11~15 안전
@@ -163,94 +130,15 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.181.1/build/three.m
       return{id:`BX-${Date.now()}-${rint(100,999)}`,grade,itemIndex,content,risk:items[itemIndex].risk,stability:rint(20,95)};
     }
 
-    function mat(color,metalness=0,roughness=.6,em=0,ei=0,extra={}){return new THREE.MeshStandardMaterial({color,metalness,roughness,emissive:em,emissiveIntensity:ei,...extra})}
+    function mat(color,metalness=0,roughness=.6,em=0,ei=0){return new THREE.MeshStandardMaterial({color,metalness,roughness,emissive:em,emissiveIntensity:ei})}
     function box(w,h,d,m,x=0,y=0,z=0){const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);o.castShadow=o.receiveShadow=true;return o}
     function clear(group){while(group.children.length){const c=group.children[0];group.remove(c);c.traverse(o=>{o.geometry?.dispose();if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>m.dispose())})}}
-    function addRivet(target,x,y,z,color=0xd1ccc1,size=.058){
-      const rivet=new THREE.Mesh(new THREE.CylinderGeometry(size,size,.05,18),mat(color,.72,.3));
-      rivet.rotation.x=Math.PI/2;
-      rivet.position.set(x,y,z);
-      rivet.castShadow=true;
-      target.add(rivet);
-      return rivet;
-    }
     function buildChest(group,grade){
-      clear(group);
-      const profile=chestProfile(grade);
-      const p=profile.palette;
-      const body=grade===3
-        ?mat(p.body,Math.min(1,p.m+.08),.2,p.trim,.16,{transparent:true,opacity:.92})
-        :mat(p.body,p.m,p.r);
-      const panel=grade===3
-        ?mat(p.panel,Math.min(1,p.m+.12),.14,p.trim,.22,{transparent:true,opacity:.9})
-        :mat(p.panel,p.m,p.r);
-      const trim=mat(p.trim,Math.min(1,p.m+.22),Math.max(.14,p.r-.2));
-      const accent=grade===4
-        ?mat(p.accent,Math.min(1,p.m+.18),Math.max(.18,p.r-.16),0x6f4f70,.22)
-        :mat(p.accent,Math.min(1,p.m+.18),Math.max(.18,p.r-.16));
-      const dark=mat(0x181817,.18,.56);
-
-      // 몸통은 모든 등급에서 같은 깔끔한 형태를 유지한다.
-      group.add(box(3.05,1.34,2.02,body,0,-.27,0));
-      group.add(box(3.16,.11,2.12,trim,0,-.91,0));
-      group.add(box(3.16,.11,2.12,trim,0,.40,0));
-      [-1.47,1.47].forEach(x=>group.add(box(.11,1.34,2.08,trim,x,-.27,0)));
-
-      // 전면 잠금쇠만 작게 남겨 돌출감을 최소화한다.
-      group.add(box(grade===4?.62:.48,grade===4?.60:.48,.08,accent,0,.10,1.055));
-      const keyCircle=new THREE.Mesh(new THREE.CircleGeometry(.05,18),dark);
-      keyCircle.position.set(0,.14,1.101);
-      group.add(keyCircle);
-      group.add(box(.045,.11,.018,dark,0,.065,1.103));
-
-      // 실제 경첩 위치.
-      const hingeMaterial=trim.clone();
-      const hingeGeometry=new THREE.CylinderGeometry(.075,.075,.56,18);
-      [-.75,.75].forEach(x=>{
-        const hinge=new THREE.Mesh(hingeGeometry,hingeMaterial);
-        hinge.rotation.z=Math.PI/2;
-        hinge.position.set(x,.43,-1.055);
-        hinge.castShadow=true;
-        group.add(hinge);
-      });
-
-      const lidPivot=new THREE.Group();
-      lidPivot.position.set(0,.43,-1.02);
-      const addLidPart=part=>lidPivot.add(part);
-
-      // 뚜껑도 앞쪽 장식판 없이 단순한 상자 형태로 구성한다.
-      addLidPart(box(3.05,.48,2.02,panel,0,.24,1.01));
-      addLidPart(box(3.16,.10,2.12,trim,0,.50,1.01));
-      addLidPart(box(3.16,.10,2.12,trim,0,-.01,1.01));
-      [-1.47,1.47].forEach(x=>addLidPart(box(.11,.58,2.08,trim,x,.24,1.01)));
-
-      // 등급별 차이는 형태를 튀어나오게 하지 않고 표면 디테일로만 표현한다.
-      if(grade===1){
-        [-1.02,1.02].forEach(x=>[-.56,.10].forEach(y=>addRivet(group,x,y,1.095,0xdfe3e5,.046)));
-      }
-      if(grade===2){
-        [-.58,0,.58].forEach(x=>addRivet(group,x,-.18,1.097,0x4a391f,.045));
-      }
-      if(grade===3){
-        const gemMat=mat(0xdaf8ff,.28,.08,0x9be4ff,.34,{transparent:true,opacity:.78});
-        [-.94,.94].forEach(x=>{
-          const gem=new THREE.Mesh(new THREE.OctahedronGeometry(.105,0),gemMat.clone());
-          gem.position.set(x,.45,1.90);
-          gem.castShadow=true;
-          lidPivot.add(gem);
-        });
-      }
-      if(grade===4){
-        const waxSeal=new THREE.Mesh(new THREE.CylinderGeometry(.13,.13,.055,22),mat(0x8f1d24,.12,.46));
-        waxSeal.rotation.x=Math.PI/2;
-        waxSeal.position.set(0,.10,1.105);
-        group.add(waxSeal);
-      }
-
-      group.add(lidPivot);
-      group.userData.profile=profile;
-      group.userData.lidPivot=lidPivot;
-      group.userData.lidProgress=0;
+      clear(group);const p=palettes[grade],body=mat(p.body,p.m,p.r),panel=mat(p.panel,p.m,p.r),trim=mat(p.trim,Math.min(1,p.m+.22),Math.max(.14,p.r-.2)),accent=mat(p.accent,Math.min(1,p.m+.18),Math.max(.18,p.r-.16));
+      group.add(box(3.05,1.34,2.02,body,0,-.25,0),box(3.08,.6,2.05,panel,0,.75,0),box(3.18,.13,2.15,trim,0,-.9,0),box(3.18,.13,2.15,trim,0,.4,0),box(3.18,.13,2.15,trim,0,1.02,0));
+      [-1.18,1.18].forEach(x=>group.add(box(.14,2.05,2.13,trim,x,.03,0)));
+      group.add(box(grade===4?.72:.55,grade===4?.88:.66,.13,accent,0,.18,1.08));
+      const kh=mat(0x181817,.16,.58),circle=new THREE.Mesh(new THREE.CircleGeometry(.055,18),kh);circle.position.set(0,.23,1.151);group.add(circle,box(.052,.13,.025,kh,0,.14,1.153));
     }
     function makeScene(canvas){
       const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(34,1,.1,100),renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true});
@@ -262,10 +150,6 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.181.1/build/three.m
 
     const inspectionPack=makeScene($('#inspectionCanvas'));
     const inspectionRoot=new THREE.Group(),inspectionModel=new THREE.Group();inspectionRoot.add(inspectionModel);inspectionRoot.position.y=.02;inspectionRoot.rotation.y=-.16;inspectionPack.scene.add(inspectionRoot);
-    const LID_MAX_ANGLE=Math.PI*.58;
-    let lidProgress=0;
-    let lidTargetProgress=null;
-    let lidOpenCommitted=false;
     const storagePack=makeScene($('#storageCanvas'));
     const storageRoot=new THREE.Group();storageRoot.rotation.y=-.12;storagePack.scene.add(storageRoot);
     const storageDropLight=new THREE.PointLight(0xffd996,0,5,2);storageDropLight.position.set(0,4,2);storagePack.scene.add(storageDropLight);
@@ -304,29 +188,18 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.181.1/build/three.m
 
     function beginCurrentBox(){
       current=state.boxes.length?state.boxes[0]:null;if(current&&!itemCatalog[current.content])current.content='mimic';used=0;results=[];resolved=false;$('#contentGuess').value='unknown';$('#riskGuess').value='unknown';$('#resultLayer').classList.remove('show');
-      lidProgress=0;lidTargetProgress=null;lidOpenCommitted=false;
       if(current){buildChest(inspectionModel,current.grade);inspectionRoot.visible=true;$('#inspectionEmpty').classList.add('hidden')}else{clear(inspectionModel);inspectionRoot.visible=false;$('#inspectionEmpty').classList.remove('hidden')}
-      setLidProgress(0);
       updateInspectionUI();
     }
-    function lidCanOpen(){
-      return Boolean(current&&!resolved&&$('#contentGuess').value!=='unknown'&&$('#riskGuess').value!=='unknown');
-    }
-    function setLidProgress(value){
-      lidProgress=THREE.MathUtils.clamp(value,0,1);
-      const pivot=inspectionModel.userData.lidPivot;
-      if(pivot)pivot.rotation.x=-LID_MAX_ANGLE*lidProgress;
-    }
-
     function updateInspectionUI(){
       $('#inspectionMoney').textContent=money(state.money);$('#inspectionInventoryText').textContent=`보유 상자 ${state.boxes.length} / ${MAX_BOXES}개`;$('#inspectionBoxCount').textContent=`${state.boxes.length} / ${MAX_BOXES}`;$('#inventoryProgress').style.width=`${state.boxes.length/MAX_BOXES*100}%`;
       if(current){$('#caseNumber').textContent='STORED BOX';$('#caseName').textContent=chestNames[current.grade];$('#caseSub').textContent=`${current.id.split('-').slice(0,2).join('-')} · 미감정 상태`}else{$('#caseName').textContent='상자 없음';$('#caseSub').textContent='적재소에서 상자를 구매하세요'}
       $$('#inspectionCount .inspection-dot').forEach((d,i)=>d.className=`inspection-dot ${i<used?'used':'available'}`);
       $('#clueList').innerHTML=results.length?results.map((r,i)=>`<article class="clue-item"><div class="clue-head"><span class="clue-name">${i+1}. ${r.name}</span><span class="clue-confidence">정확</span></div><p class="clue-result">${r.text}</p></article>`).join(''):'<div class="clue-empty">아직 기록된 조사 결과가 없습니다.</div>';
       $$('#toolList .tool-button').forEach(b=>b.disabled=!current||resolved||used>=4||results.some(r=>r.id===b.dataset.tool));
+      const guessesReady=$('#contentGuess').value!=='unknown'&&$('#riskGuess').value!=='unknown';
+      $('#openBoxButton').disabled=!current||resolved||!guessesReady;
       $('#contentGuess').disabled=$('#riskGuess').disabled=!current||resolved;
-      const openButton=$('#openBoxButton');if(openButton){openButton.disabled=!lidCanOpen()||lidTargetProgress!==null;openButton.querySelector('.action-info').textContent=lidCanOpen()?'판정을 확정하고 상자를 개봉합니다.':'카테고리와 안전성을 모두 선택하면 개봉할 수 있습니다.';}
-      setLidProgress(lidProgress);
     }
     function resolveAction(action){
       if(!current||resolved||action!=="open")return;
@@ -440,7 +313,7 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.181.1/build/three.m
       $('#buyBoxButton').disabled=$('#buyAnotherButton').disabled=purchaseLocked;
       $('#buyBoxButton').textContent=$('#buyAnotherButton').textContent=state.boxes.length>=MAX_BOXES?'보관 한도 15개':'상자 1개 구매';
       $('#goInspectionButton').disabled=state.boxes.length===0;
-      const list=$('#storageList');list.innerHTML=state.boxes.length?state.boxes.map((b,i)=>`<div class="storage-row"><div class="storage-row-main"><strong>${i+1}. ${chestNames[b.grade]}</strong><small>미감정 상태</small></div><span class="storage-row-grade">★ ${b.grade+1}</span></div>`).join(''):'<div class="storage-empty">보유한 상자가 없습니다.</div>';
+      const list=$('#storageList');list.innerHTML=state.boxes.length?state.boxes.map((b,i)=>`<div class="storage-row"><span>${i+1}. 미감정 상자</span><span>${chestNames[b.grade]}</span></div>`).join(''):'<div class="storage-empty">보유한 상자가 없습니다.</div>';
       if(rebuild)buildStorageStack();
     }
     function updateGlobalUI(){$('#menuMoney').textContent=money(state.money);$('#menuBoxes').textContent=`${state.boxes.length}개`;$('#inspectionMoney').textContent=money(state.money);$('#inspectionBoxCount').textContent=`${state.boxes.length} / ${MAX_BOXES}`;$('#storageMoney').textContent=money(state.money)}
@@ -485,9 +358,8 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.181.1/build/three.m
     $('#resetSaveButton').onclick=()=>{if(confirm('돈과 보유 상자를 처음 상태로 되돌릴까요?')){state={money:1000,boxes:[],tutorialDone:false};saveState();updateStorageUI();goMain()}};
     $('#ruleButton').onclick=()=>$('#ruleOverlay').classList.remove('hidden');$('#ruleClose').onclick=()=>$('#ruleOverlay').classList.add('hidden');
     $('#resultNext').onclick=()=>{if(state.boxes.length)beginCurrentBox();else goStorage()};
-    $('#openBoxButton').onclick=()=>{if(!lidCanOpen()||lidTargetProgress!==null)return;lidTargetProgress=1;updateInspectionUI()};
-    $('#contentGuess').addEventListener('change',()=>{updateInspectionUI();if($('#contentGuess').value!=='unknown'&&$('#riskGuess').value!=='unknown')advanceInspectionGuide('guess')});
-    $('#riskGuess').addEventListener('change',()=>{updateInspectionUI();if($('#contentGuess').value!=='unknown'&&$('#riskGuess').value!=='unknown')advanceInspectionGuide('guess')});
+    $('#openBoxButton').onclick=()=>resolveAction('open');
+    $('#contentGuess').addEventListener('change',()=>{if($('#contentGuess').value!=='unknown'&&$('#riskGuess').value!=='unknown')advanceInspectionGuide('guess')});$('#riskGuess').addEventListener('change',()=>{if($('#contentGuess').value!=='unknown'&&$('#riskGuess').value!=='unknown')advanceInspectionGuide('guess')});
 
     const guideOverlay=$('#guideOverlay'),guideFocus=$('#guideFocus'),guideCard=$('#guideCard'),guideKicker=$('#guideKicker'),guideTitle=$('#guideTitle'),guideText=$('#guideText'),guideTask=$('#guideTask'),guideProgress=$('#guideProgress'),guideNext=$('#guideNext'),guideSkip=$('#guideSkip');
     let guideMode='',guideIndex=0;
@@ -496,7 +368,7 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.181.1/build/three.m
       {target:'#guideCluesTarget',title:'조사 기록을 확인하세요',text:'방금 얻은 단서가 조사 기록에 추가됐습니다. 모든 결과는 정확하지만 표현은 간접적입니다.',task:'기록을 읽은 뒤 아래 확인 버튼을 눌러주세요.',action:'next'},
       {target:'[data-tool="surface"]',title:'위험도 단서를 하나 더 찾으세요',text:'표면 흔적은 상자 안쪽의 긁힘과 충격 흔적으로 위험도를 알려줍니다.',task:'강조된 표면 흔적 버튼을 눌러주세요.',action:'tool',value:'surface'},
       {target:'#guideGuessTarget',title:'판정을 직접 입력하세요',text:'카테고리와 위험도를 선택해야 개봉 결과와 비교할 수 있습니다.',task:'카테고리와 위험도를 모두 선택해주세요.',action:'guess'},
-      {target:'#guideOpenTarget',title:'상자를 개봉해 답을 확인하세요',text:'카테고리와 안전성 판정을 마치면 개봉 버튼이 활성화됩니다.',task:'강조된 상자 개봉 버튼을 눌러주세요.',action:'open'},
+      {target:'#guideOpenTarget',title:'상자를 개봉해 답을 확인하세요',text:'개봉하면 상자 한 개가 소비되고 카테고리와 위험도 정답마다 150 G를 받습니다.',task:'강조된 상자 개봉 버튼을 눌러주세요.',action:'open'},
       {target:'#resultLayer .result-card',title:'정산표를 읽어보세요',text:'카테고리 정답 150 G와 위험도 정답 150 G가 각각 계산됩니다. 둘 다 맞히면 총 300 G입니다.',task:'정산 내역을 확인하면 첫 업무가 끝납니다.',action:'complete'}
     ];
     function renderGuideProgress(total,current){guideProgress.innerHTML=Array.from({length:total},(_,i)=>`<span class="${i<=current?'done':''}"></span>`).join('')}
@@ -528,15 +400,6 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.181.1/build/three.m
     const clock=new THREE.Clock();
     function animate(){requestAnimationFrame(animate);const d=Math.min(clock.getDelta(),.05),t=clock.elapsedTime;
       if(current&&insMode==='idle')inspectionRoot.position.y=.02+Math.sin(t*1.2)*.018;else if(insMode!=='idle'){insTime+=d;const p=Math.min(insTime/.75,1);if(insMode==='lift')inspectionRoot.position.y=.02+Math.sin(p*Math.PI)*.26;else inspectionRoot.rotation.z=Math.sin(p*Math.PI*6)*Math.sin(p*Math.PI)*.035;if(p>=1){insMode='idle';inspectionRoot.position.set(0,.02,0);inspectionRoot.rotation.z=0}}
-      if(lidTargetProgress!==null){
-        const speed=lidTargetProgress>lidProgress?d*3.4:d*4.8;
-        const next=THREE.MathUtils.lerp(lidProgress,lidTargetProgress,Math.min(1,speed));
-        setLidProgress(Math.abs(next-lidTargetProgress)<.008?lidTargetProgress:next);
-        if(Math.abs(lidProgress-lidTargetProgress)<.009){
-          lidProgress=lidTargetProgress;setLidProgress(lidProgress);lidTargetProgress=null;
-          if(lidProgress>=1&&!lidOpenCommitted){lidOpenCommitted=true;setTimeout(()=>resolveAction('open'),240)}
-        }
-      }
       if(storageDropAnimation){
         const a=storageDropAnimation;a.time+=d;const p=Math.min(a.time/a.duration,1);const fall=Math.min(p/.72,1);const ease=fall<1?fall*fall:1;const settle=p>.72?(p-.72)/.28:0;
         a.mesh.position.x=a.targetX;a.mesh.position.z=a.targetZ;
