@@ -135,8 +135,20 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.181.1/build/three.m
     function clear(group){while(group.children.length){const c=group.children[0];group.remove(c);c.traverse(o=>{o.geometry?.dispose();if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>m.dispose())})}}
     function buildChest(group,grade){
       clear(group);const p=palettes[grade],body=mat(p.body,p.m,p.r),panel=mat(p.panel,p.m,p.r),trim=mat(p.trim,Math.min(1,p.m+.22),Math.max(.14,p.r-.2)),accent=mat(p.accent,Math.min(1,p.m+.18),Math.max(.18,p.r-.16));
-      group.add(box(3.05,1.34,2.02,body,0,-.25,0),box(3.08,.6,2.05,panel,0,.75,0),box(3.18,.13,2.15,trim,0,-.9,0),box(3.18,.13,2.15,trim,0,.4,0),box(3.18,.13,2.15,trim,0,1.02,0));
-      [-1.18,1.18].forEach(x=>group.add(box(.14,2.05,2.13,trim,x,.03,0)));
+      group.add(
+        box(3.05,1.34,2.02,body,0,-.25,0),
+        box(3.08,.6,2.05,panel,0,.75,0),
+        box(3.18,.13,2.15,trim,0,-.9,0),
+        box(3.18,.13,2.15,trim,0,.4,0),
+        box(3.18,.13,2.15,trim,0,1.02,0)
+      );
+
+      // 옆면을 관통하던 긴 보강판은 제거한다.
+      // 대신 앞면 바깥쪽에 얕은 세로 스트랩을 두어 메시가 겹치지 않게 한다.
+      [-1.36,1.36].forEach(x=>{
+        group.add(box(.12,1.92,.08,trim,x,.04,1.08));
+      });
+
       group.add(box(grade===4?.72:.55,grade===4?.88:.66,.13,accent,0,.18,1.08));
       const kh=mat(0x181817,.16,.58),circle=new THREE.Mesh(new THREE.CircleGeometry(.055,18),kh);circle.position.set(0,.23,1.151);group.add(circle,box(.052,.13,.025,kh,0,.14,1.153));
     }
