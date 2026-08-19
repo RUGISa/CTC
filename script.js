@@ -134,23 +134,30 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.181.1/build/three.m
     function box(w,h,d,m,x=0,y=0,z=0){const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);o.castShadow=o.receiveShadow=true;return o}
     function clear(group){while(group.children.length){const c=group.children[0];group.remove(c);c.traverse(o=>{o.geometry?.dispose();if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>m.dispose())})}}
     function buildChest(group,grade){
-      clear(group);const p=palettes[grade],body=mat(p.body,p.m,p.r),panel=mat(p.panel,p.m,p.r),trim=mat(p.trim,Math.min(1,p.m+.22),Math.max(.14,p.r-.2)),accent=mat(p.accent,Math.min(1,p.m+.18),Math.max(.18,p.r-.16));
-      group.add(
-        box(3.05,1.34,2.02,body,0,-.25,0),
-        box(3.08,.6,2.05,panel,0,.75,0),
-        box(3.18,.13,2.15,trim,0,-.9,0),
-        box(3.18,.13,2.15,trim,0,.4,0),
-        box(3.18,.13,2.15,trim,0,1.02,0)
-      );
+      clear(group);
+      const p=palettes[grade];
+      const body=mat(p.body,p.m,p.r);
+      const lid=mat(p.panel,p.m,Math.max(.18,p.r-.08));
+      const trim=mat(p.trim,Math.min(1,p.m+.2),Math.max(.16,p.r-.18));
+      const accent=mat(p.accent,Math.min(1,p.m+.16),Math.max(.18,p.r-.14));
+      const dark=mat(0x181817,.16,.58);
 
-      // 옆면을 관통하던 긴 보강판은 제거한다.
-      // 대신 앞면 바깥쪽에 얕은 세로 스트랩을 두어 메시가 겹치지 않게 한다.
-      [-1.36,1.36].forEach(x=>{
-        group.add(box(.12,1.92,.08,trim,x,.04,1.08));
-      });
+      // 겹침이 생기지 않도록 상자를 최소한의 독립 메시로 구성한다.
+      // 본체와 뚜껑은 서로 닿기만 하고 관통하지 않는다.
+      const bodyMesh=box(3.0,1.34,2.0,body,0,-.27,0);
+      const lidMesh=box(3.16,.34,2.14,lid,0,.57,0);
+      const baseTrim=box(3.12,.12,2.12,trim,0,-.96,0);
+      const lidTrim=box(3.22,.10,2.18,trim,0,.74,0);
+      group.add(bodyMesh,lidMesh,baseTrim,lidTrim);
 
-      group.add(box(grade===4?.72:.55,grade===4?.88:.66,.13,accent,0,.18,1.08));
-      const kh=mat(0x181817,.16,.58),circle=new THREE.Mesh(new THREE.CircleGeometry(.055,18),kh);circle.position.set(0,.23,1.151);group.add(circle,box(.052,.13,.025,kh,0,.14,1.153));
+      // 잠금쇠는 앞면에서 충분히 떨어뜨려 본체와 같은 면에 겹치지 않게 한다.
+      const lockWidth=grade===4?.70:.52;
+      const lockHeight=grade===4?.68:.52;
+      group.add(box(lockWidth,lockHeight,.10,accent,0,.10,1.055));
+      const keyCircle=new THREE.Mesh(new THREE.CircleGeometry(.052,18),dark);
+      keyCircle.position.set(0,.15,1.112);
+      group.add(keyCircle);
+      group.add(box(.045,.11,.018,dark,0,.075,1.114));
     }
     function makeScene(canvas){
       const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(34,1,.1,100),renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true});
