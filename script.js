@@ -138,26 +138,102 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.181.1/build/three.m
       const p=palettes[grade];
       const body=mat(p.body,p.m,p.r);
       const lid=mat(p.panel,p.m,Math.max(.18,p.r-.08));
-      const trim=mat(p.trim,Math.min(1,p.m+.2),Math.max(.16,p.r-.18));
+      const trim=mat(p.trim,Math.min(1,p.m+.22),Math.max(.16,p.r-.2));
       const accent=mat(p.accent,Math.min(1,p.m+.16),Math.max(.18,p.r-.14));
-      const dark=mat(0x181817,.16,.58);
+      const dark=mat(0x181817,.18,.62);
+      const detail=mat(0x5a4937,.08,.78);
 
-      // 겹침이 생기지 않도록 상자를 최소한의 독립 메시로 구성한다.
-      // 본체와 뚜껑은 서로 닿기만 하고 관통하지 않는다.
-      const bodyMesh=box(3.0,1.34,2.0,body,0,-.27,0);
-      const lidMesh=box(3.16,.34,2.14,lid,0,.57,0);
-      const baseTrim=box(3.12,.12,2.12,trim,0,-.96,0);
-      const lidTrim=box(3.22,.10,2.18,trim,0,.74,0);
-      group.add(bodyMesh,lidMesh,baseTrim,lidTrim);
+      // 기본 실루엣. 각 파츠는 서로 다른 깊이에 배치해 Z-fighting을 피한다.
+      group.add(box(3.00,1.34,2.00,body,0,-.27,0));
+      group.add(box(3.16,.34,2.14,lid,0,.57,0));
+      group.add(box(3.14,.12,2.12,trim,0,-.98,0));
+      group.add(box(3.24,.10,2.20,trim,0,.78,0));
 
-      // 잠금쇠는 앞면에서 충분히 떨어뜨려 본체와 같은 면에 겹치지 않게 한다.
-      const lockWidth=grade===4?.70:.52;
+      // 모서리 프레임. 본체 표면보다 바깥쪽에만 위치한다.
+      [-1.555,1.555].forEach(x=>{
+        group.add(box(.08,1.18,1.88,trim,x,-.24,0));
+      });
+      [-.72,.30].forEach(y=>{
+        group.add(box(2.82,.07,.07,trim,0,y,1.045));
+      });
+
+      // 잠금쇠와 열쇠구멍.
+      const lockWidth=grade===4?.72:.54;
       const lockHeight=grade===4?.68:.52;
-      group.add(box(lockWidth,lockHeight,.10,accent,0,.10,1.055));
-      const keyCircle=new THREE.Mesh(new THREE.CircleGeometry(.052,18),dark);
-      keyCircle.position.set(0,.15,1.112);
+      group.add(box(lockWidth,lockHeight,.11,accent,0,.10,1.075));
+      const keyCircle=new THREE.Mesh(new THREE.CircleGeometry(.052,20),dark);
+      keyCircle.position.set(0,.15,1.136);
       group.add(keyCircle);
-      group.add(box(.045,.11,.018,dark,0,.075,1.114));
+      group.add(box(.045,.12,.018,dark,0,.075,1.137));
+
+      // 전면 리벳. 장식물은 앞면보다 충분히 앞으로 띄운다.
+      const rivetMat=mat(grade===2?0xe3bf61:0xb7b2aa,.72,.28);
+      const addRivet=(x,y,size=.045)=>{
+        const r=new THREE.Mesh(new THREE.CylinderGeometry(size,size,.05,16),rivetMat);
+        r.rotation.x=Math.PI/2;
+        r.position.set(x,y,1.105);
+        r.castShadow=true;
+        group.add(r);
+      };
+      [-1.18,1.18].forEach(x=>[-.67,.26].forEach(y=>addRivet(x,y)));
+
+      // 등급별 디테일. 모두 본체와 겹치지 않는 전면/상단 위치에만 배치한다.
+      if(grade===0){
+        // 목재 판재의 이음선
+        [-.48,-.18,.12].forEach(y=>group.add(box(2.56,.025,.025,detail,0,y,1.025)));
+        [-.82,0,.82].forEach(x=>group.add(box(.025,1.03,.025,detail,x,-.22,1.026)));
+      }
+
+      if(grade===1){
+        const silver=mat(0xd5d9db,.88,.22);
+        group.add(box(2.15,.08,.05,silver,0,-.20,1.085));
+        [-.95,.95].forEach(x=>{
+          group.add(box(.08,.92,.05,silver,x,-.25,1.085));
+          addRivet(x,-.25,.055);
+        });
+      }
+
+      if(grade===2){
+        const gold=mat(0xe4bd54,.78,.22);
+        group.add(box(1.95,.11,.055,gold,0,-.18,1.09));
+        const medallion=new THREE.Mesh(new THREE.CylinderGeometry(.22,.22,.065,28),gold);
+        medallion.rotation.x=Math.PI/2;
+        medallion.position.set(0,-.18,1.135);
+        medallion.castShadow=true;
+        group.add(medallion);
+        const ring=new THREE.Mesh(new THREE.RingGeometry(.085,.135,24),dark);
+        ring.position.set(0,-.18,1.172);
+        group.add(ring);
+      }
+
+      if(grade===3){
+        const crystalMat=mat(0x8fd5df,.28,.16,0x4ea6b7,.18);
+        const crystalGeo=new THREE.OctahedronGeometry(.13,0);
+        [-1.08,1.08].forEach(x=>{
+          const c=new THREE.Mesh(crystalGeo,crystalMat);
+          c.position.set(x,.91,.56);
+          c.rotation.y=Math.PI/4;
+          c.castShadow=true;
+          group.add(c);
+        });
+        const inset=mat(0xa9dce2,.32,.14);
+        group.add(box(2.08,.07,.05,inset,0,-.18,1.09));
+      }
+
+      if(grade===4){
+        const sealBand=mat(0x4a454a,.34,.54);
+        [-.88,.88].forEach(x=>group.add(box(.11,1.18,.06,sealBand,x,-.24,1.085)));
+        group.add(box(2.28,.10,.06,sealBand,0,-.18,1.085));
+        const wax=mat(0x8c232a,.14,.48);
+        const waxSeal=new THREE.Mesh(new THREE.CylinderGeometry(.18,.18,.07,28),wax);
+        waxSeal.rotation.x=Math.PI/2;
+        waxSeal.position.set(0,-.18,1.145);
+        waxSeal.castShadow=true;
+        group.add(waxSeal);
+        const sealMark=new THREE.Mesh(new THREE.RingGeometry(.055,.10,20),mat(0xd8b66d,.42,.28));
+        sealMark.position.set(0,-.18,1.184);
+        group.add(sealMark);
+      }
     }
     function makeScene(canvas){
       const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(34,1,.1,100),renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true});
